@@ -299,41 +299,14 @@
   </div>
 
   <script>
+    // เหลือไว้เพียงการ์ด "ปีศาจจากขุมนรก" ใบเดียว
     const cards = [
-      { 
-        id: 1,
-        title: 'จอมมังกรอเวจีโบราณ', 
-        rarity: 'LR', 
-        desc: 'การ์ดระดับตำนานสูงสุด ผู้ปกครองมิติเวลาและความมืดมิดทั้งปวง!', 
-        image: 'images/dragon.jpg' 
-      },
       { 
         id: 2,
         title: 'ปีศาจจากขุมนรก', 
         rarity: 'SSR', 
         desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณและทำลายล้างทุกสิ่ง!', 
-        image: 'images/demon.jpg' 
-      },
-      { 
-        id: 3,
-        title: 'จอมเวทน้ำแข็ง', 
-        rarity: 'SR', 
-        desc: 'สามารถแช่แข็งศัตรูให้อยู่กับที่ได้ด้วยเวทมนตร์โบราณ', 
-        image: 'images/mage.jpg' 
-      },
-      { 
-        id: 4,
-        title: 'อัศวินเกราะเหล็ก', 
-        rarity: 'R', 
-        desc: 'มีพลังป้องกันสูง คอยปกป้องเพื่อนร่วมทีมจากความเสี่ยง', 
-        image: 'images/knight.jpg' 
-      },
-      { 
-        id: 5,
-        title: 'นกพิราบส่งสาร', 
-        rarity: 'N', 
-        desc: 'บินไว แต่ไม่มีพลังต่อสู้ เอาไว้ส่งจดหมายอย่างเดียว', 
-        image: 'images/pigeon.jpg' 
+        image: 'images/demon.jpe' // หากเปลี่ยนชื่อรูปเป็น demon.jpg ในเครื่องแล้ว ให้แก้คำลงท้ายเป็น .jpg ด้วยนะครับ
       }
     ];
 
@@ -476,6 +449,11 @@
       }
     }
 
+    document.getElementById('card').addEventListener('click', drawCard);
+  </script>
+</body>
+</html>
+ 
     document.getElementById('card').addEventListener('click', drawCard);
   </script>
 </body>
