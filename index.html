@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง</title>
+  <title>เกมสุ่มการ์ดวัดดวง (Online)</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,22 +16,13 @@
       color: white;
       padding: 20px 0;
     }
-
-    .container {
-      text-align: center;
-      width: 90%;
-      max-width: 600px;
-    }
-
-    /* หน้าล็อกอิน */
+    .container { text-align: center; width: 90%; max-width: 600px; }
     .login-box {
       background: rgba(255, 255, 255, 0.1);
       padding: 30px;
       border-radius: 15px;
       backdrop-filter: blur(10px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
     }
-
     .login-box input {
       padding: 10px 15px;
       font-size: 1rem;
@@ -39,236 +30,55 @@
       border: 1px solid #ccc;
       width: 70%;
       margin-bottom: 15px;
-      outline: none;
     }
-
-    /* แผงผู้เล่น */
     .player-bar {
       background: rgba(255, 255, 255, 0.1);
       padding: 10px 15px;
       border-radius: 10px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
       margin-bottom: 20px;
-      font-size: 0.9rem;
     }
-
-    /* การ์ดหลัก */
-    .card {
-      width: 220px;
-      height: 330px;
-      perspective: 1000px;
-      margin: 20px auto;
-      cursor: pointer;
-    }
-
-    .card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      text-align: center;
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-    }
-
-    .card-inner.flipped {
-      transform: rotateY(180deg);
-    }
-
+    .card { width: 220px; height: 330px; perspective: 1000px; margin: 20px auto; cursor: pointer; }
+    .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+    .card-inner.flipped { transform: rotateY(180deg); }
     .card-front, .card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      border-radius: 15px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px;
-      box-sizing: border-box;
+      position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+      border-radius: 15px; display: flex; flex-direction: column; justify-content: space-between;
+      align-items: center; padding: 15px; box-sizing: border-box;
     }
-
-    .card-front {
-      background: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
-      border: 4px solid #fff;
-      justify-content: center;
-    }
-
+    .card-front { background: linear-gradient(45deg, #0f2027, #203a43, #2c5364); border: 4px solid #fff; justify-content: center; }
     .card-front span { font-size: 4rem; }
-
-    .card-back {
-      background: #fff;
-      color: #333;
-      transform: rotateY(180deg);
-      border: 4px solid #ccc;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-
-    /* สีขอบตามระดับ Rarity */
-    .card-back.rarity-N { border-color: #8a8a8a; }
-    .card-back.rarity-R { border-color: #3498db; box-shadow: 0 0 15px rgba(52, 152, 219, 0.6); }
-    .card-back.rarity-SR { border-color: #9b59b6; box-shadow: 0 0 20px rgba(155, 89, 182, 0.8); }
-    .card-back.rarity-SSR { border-color: #f1c40f; box-shadow: 0 0 25px rgba(241, 196, 15, 1); }
-    .card-back.rarity-LR { border-color: #ffd700; animation: lrGlow 1.8s infinite alternate; }
-
-    @keyframes lrGlow {
-      0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 0 35px rgba(255, 0, 128, 0.6); }
-      100% { box-shadow: 0 0 35px rgba(0, 255, 255, 1), 0 0 50px rgba(255, 215, 0, 1); }
-    }
-
-    .rarity-badge {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: #333;
-      color: #fff;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      font-weight: bold;
-    }
-
-    .rarity-badge.badge-LR {
-      background: linear-gradient(45deg, #ffe066, #f5af19, #e65c00);
-      color: #000;
-      font-weight: 900;
-    }
-
-    .card-back img {
-      width: 100%;
-      height: 130px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-top: 15px;
-    }
-
-    .card-back h2 { margin: 6px 0 2px 0; font-size: 1.1rem; }
-    .card-back p { font-size: 0.8rem; color: #555; margin: 0; }
-
-    /* ปุ่มกด */
-    button {
-      background-color: #e74c3c;
-      color: white;
-      border: none;
-      padding: 12px 28px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      border-radius: 25px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: background 0.3s, transform 0.1s;
-    }
-
-    button:hover { background-color: #c0392b; }
-    button:active { transform: scale(0.95); }
-
-    .btn-sm {
-      padding: 5px 12px;
-      font-size: 0.8rem;
-      border-radius: 12px;
-    }
-
-    .btn-danger { background-color: #7f8c8d; }
-    .btn-danger:hover { background-color: #95a5a6; }
-
-    .btn-reset {
-      margin-top: 25px;
-      background-color: #34495e;
-    }
-    .btn-reset:hover { background-color: #2c3e50; }
-
-    /* คอลเลกชัน */
-    .collection-section {
-      margin-top: 25px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-    }
-
-    .collection-section h2 { font-size: 1.2rem; margin-bottom: 15px; }
-
-    .collection-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 12px;
-    }
-
-    .collection-item {
-      position: relative;
-      background: #2a2a40;
-      border-radius: 8px;
-      padding: 8px;
-      text-align: center;
-      border: 2px solid #444;
-      opacity: 0.3;
-      filter: grayscale(100%);
-      transition: all 0.3s;
-    }
-
-    .collection-item.unlocked {
-      opacity: 1;
-      filter: grayscale(0%);
-      border-color: #f1c40f;
-      background: #fff;
-      color: #333;
-    }
-
-    .collection-item img {
-      width: 100%;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 4px;
-    }
-
-    .collection-item .item-title {
-      font-size: 0.65rem;
-      font-weight: bold;
-      margin-top: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .collection-item .item-badge {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      font-size: 0.6rem;
-      background: #000;
-      color: #fff;
-      padding: 1px 4px;
-      border-radius: 4px;
-    }
+    .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; box-shadow: 0 0 25px rgba(241, 196, 15, 1); }
+    .rarity-badge { position: absolute; top: 10px; right: 10px; background: #333; color: #fff; padding: 2px 8px; border-radius: 10px; }
+    .card-back img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; margin-top: 15px; }
+    button { background-color: #e74c3c; color: white; border: none; padding: 12px 28px; font-size: 1.1rem; border-radius: 25px; cursor: pointer; }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; border-radius: 12px; background-color: #7f8c8d; }
+    .collection-section { margin-top: 25px; background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; }
+    .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
+    .collection-item { background: #2a2a40; border-radius: 8px; padding: 8px; opacity: 0.3; filter: grayscale(100%); transition: all 0.3s; }
+    .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
+    .collection-item img { width: 100%; height: 60px; object-fit: cover; border-radius: 4px; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>🎴 เกมสุ่มการ์ดวัดดวง</h1>
+    <h1>🎴 เกมสุ่มการ์ดวัดดวง (Online)</h1>
 
-    <!-- หน้าต่างเข้าสู่ระบบ -->
     <div class="login-box" id="loginBox">
       <h2>👤 กรอกชื่อผู้เล่นเพื่อเริ่มเล่น</h2>
-      <input type="text" id="usernameInput" placeholder="พิมพ์ชื่อผู้เล่นที่นี่..." maxlength="15">
-      <br>
+      <input type="text" id="usernameInput" placeholder="พิมพ์ชื่อผู้เล่นที่นี่..." maxlength="15"><br>
       <button onclick="login()">เข้าสู่ระบบ</button>
     </div>
 
-    <!-- ส่วนเนื้อหาเกมหลัก -->
     <div class="game-content" id="gameContent" style="display: none;">
-      
-      <!-- แผงข้อมูลผู้เล่น -->
       <div class="player-bar">
         <span>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></span>
         <span>🎲 สุ่มไปแล้ว: <strong id="drawCountDisplay">0</strong> ครั้ง</span>
-        <button class="btn-sm btn-danger" onclick="logout()">ออกจากระบบ</button>
+        <button class="btn-sm" onclick="logout()">ออกจากระบบ</button>
       </div>
 
-      <!-- แท่นสุ่มการ์ด -->
       <div class="card" id="card">
         <div class="card-inner" id="cardInner">
           <div class="card-front">
@@ -286,74 +96,84 @@
 
       <button id="drawBtn" onclick="drawCard()">🎲 สุ่มการ์ด</button>
 
-      <!-- สมุดสะสมการ์ด -->
       <div class="collection-section">
         <h2>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h2>
         <div class="collection-grid" id="collectionGrid"></div>
       </div>
-
-      <!-- ปุ่มรีเซ็ตข้อมูล -->
-      <button class="btn-sm btn-reset" onclick="resetData()">🔄 รีเซ็ตข้อมูลสะสมทั้งหมด</button>
     </div>
-
   </div>
 
-  <script>
-    // เหลือไว้เพียงการ์ด "ปีศาจจากขุมนรก" ใบเดียว
+  <!-- นำเข้า Firebase SDK และใส่คีย์ของคุณ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // คีย์ Firebase จากโปรเจกต์ของคุณ
+    const firebaseConfig = {
+      apiKey: "AIzaSyANzE04i1AQXO8oqUP6i8oqfMNW1GQlhB4",
+      authDomain: "my-game-card.firebaseapp.com",
+      databaseURL: "https://my-game-card-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "my-game-card",
+      storageBucket: "my-game-card.firebasestorage.app",
+      messagingSenderId: "718520908168",
+      appId: "1:718520908168:web:211e865318c8516f3f623d",
+      measurementId: "G-9RLMD56WYS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     const cards = [
       { 
         id: 2,
         title: 'ปีศาจจากขุมนรก', 
         rarity: 'SSR', 
         desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณและทำลายล้างทุกสิ่ง!', 
-        image: 'images/demon.jpe' // หากเปลี่ยนชื่อรูปเป็น demon.jpg ในเครื่องแล้ว ให้แก้คำลงท้ายเป็น .jpg ด้วยนะครับ
+        image: 'images/demon.jpe' 
       }
     ];
 
-    let playerData = {
-      username: '',
-      unlockedCards: [],
-      drawCount: 0
-    };
-
+    let playerData = { username: '', unlockedCards: [], drawCount: 0 };
     let isFlipped = false;
 
-    window.onload = function() {
-      const savedData = localStorage.getItem('cardGame_playerData');
-      if (savedData) {
-        playerData = JSON.parse(savedData);
+    window.login = async function() {
+      const usernameInput = document.getElementById('usernameInput').value.trim();
+      if (!usernameInput) return alert('กรุณากรอกชื่อผู้เล่นก่อนครับ');
+
+      playerData.username = usernameInput;
+
+      // ดึงข้อมูลผู้เล่นจาก Firebase
+      const dbRef = ref(db);
+      try {
+        const snapshot = await get(child(dbRef, `players/${usernameInput}`));
+        if (snapshot.exists()) {
+          playerData = snapshot.val();
+        } else {
+          await saveDataOnline();
+        }
         showGameContent();
+      } catch (error) {
+        console.error("Firebase Error:", error);
+        alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการตั้งค่า Realtime Database บน Firebase");
       }
     };
 
-    function login() {
-      const usernameInput = document.getElementById('usernameInput').value.trim();
-      if (usernameInput === '') {
-        alert('กรุณากรอกชื่อผู้เล่นก่อนครับ');
-        return;
-      }
-
-      playerData.username = usernameInput;
-      saveData();
-      showGameContent();
-    }
-
-    function logout() {
+    window.logout = function() {
       document.getElementById('loginBox').style.display = 'block';
       document.getElementById('gameContent').style.display = 'none';
       document.getElementById('usernameInput').value = '';
-    }
+    };
 
-    function saveData() {
-      localStorage.setItem('cardGame_playerData', JSON.stringify(playerData));
+    async function saveDataOnline() {
+      if (!playerData.username) return;
+      await set(ref(db, 'players/' + playerData.username), playerData);
     }
 
     function showGameContent() {
       document.getElementById('loginBox').style.display = 'none';
       document.getElementById('gameContent').style.display = 'block';
       document.getElementById('playerDisplay').innerText = playerData.username;
-      document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
-
+      document.getElementById('drawCountDisplay').innerText = playerData.drawCount || 0;
       initCollection();
     }
 
@@ -362,94 +182,64 @@
       document.getElementById('totalCount').innerText = cards.length;
       grid.innerHTML = '';
 
+      const unlockedList = playerData.unlockedCards || [];
+
       cards.forEach(card => {
-        const isUnlocked = playerData.unlockedCards.includes(card.id);
+        const isUnlocked = unlockedList.includes(card.id);
         const item = document.createElement('div');
         item.className = `collection-item ${isUnlocked ? 'unlocked' : ''}`;
-        item.id = `collect-${card.id}`;
         
         item.innerHTML = `
-          <span class="item-badge">${card.rarity}</span>
           <img src="${card.image}" alt="${card.title}">
-          <div class="item-title">${card.title}</div>
+          <div style="font-size:0.7rem; font-weight:bold;">${card.title}</div>
         `;
-        
         grid.appendChild(item);
       });
 
-      document.getElementById('collectedCount').innerText = playerData.unlockedCards.length;
+      document.getElementById('collectedCount').innerText = unlockedList.length;
     }
 
-    function drawCard() {
+    window.drawCard = function() {
       const cardInner = document.getElementById('cardInner');
       const btn = document.getElementById('drawBtn');
-
       btn.disabled = true;
 
       if (isFlipped) {
         cardInner.classList.remove('flipped');
         isFlipped = false;
-        
-        setTimeout(() => {
-          randomizeAndFlip();
-        }, 600);
+        setTimeout(randomizeAndFlip, 600);
       } else {
         randomizeAndFlip();
       }
-    }
+    };
 
-    function randomizeAndFlip() {
-      const cardInner = document.getElementById('cardInner');
-      const cardBack = document.getElementById('cardBack');
-      const cardRarity = document.getElementById('cardRarity');
-      const btn = document.getElementById('drawBtn');
+    async function randomizeAndFlip() {
+      const selectedCard = cards[0];
 
-      const randomIndex = Math.floor(Math.random() * cards.length);
-      const selectedCard = cards[randomIndex];
-
-      playerData.drawCount++;
+      playerData.drawCount = (playerData.drawCount || 0) + 1;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
 
-      cardBack.className = 'card-back';
-      cardBack.classList.add(`rarity-${selectedCard.rarity}`);
-
-      cardRarity.className = 'rarity-badge';
-      if (selectedCard.rarity === 'LR') {
-        cardRarity.classList.add('badge-LR');
-      }
-
-      cardRarity.innerText = selectedCard.rarity;
+      document.getElementById('cardRarity').innerText = selectedCard.rarity;
       document.getElementById('cardImage').src = selectedCard.image;
       document.getElementById('cardTitle').innerText = selectedCard.title;
       document.getElementById('cardDesc').innerText = selectedCard.desc;
 
+      if (!playerData.unlockedCards) playerData.unlockedCards = [];
+
       if (!playerData.unlockedCards.includes(selectedCard.id)) {
         playerData.unlockedCards.push(selectedCard.id);
-        const collectItem = document.getElementById(`collect-${selectedCard.id}`);
-        if (collectItem) collectItem.classList.add('unlocked');
-        document.getElementById('collectedCount').innerText = playerData.unlockedCards.length;
       }
 
-      saveData();
+      await saveDataOnline();
+      initCollection();
 
-      cardInner.classList.add('flipped');
+      document.getElementById('cardInner').classList.add('flipped');
       isFlipped = true;
 
-      setTimeout(() => {
-        btn.disabled = false;
-      }, 600);
+      setTimeout(() => { document.getElementById('drawBtn').disabled = false; }, 600);
     }
 
-    function resetData() {
-      if (confirm('คุณต้องการรีเซ็ตประวัติการสุ่มและการ์ดที่สะสมทั้งหมดใช่หรือไม่?')) {
-        playerData.unlockedCards = [];
-        playerData.drawCount = 0;
-        saveData();
-        showGameContent();
-      }
-    }
-
-    document.getElementById('card').addEventListener('click', drawCard);
+    document.getElementById('card').addEventListener('click', window.drawCard);
   </script>
 </body>
 </html>
