@@ -17,6 +17,36 @@
       padding: 20px 0;
     }
     .container { text-align: center; width: 90%; max-width: 600px; }
+    
+    /* Promo Banner Style */
+    .promo-banner {
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+      border: 3px solid #ffeaa7;
+      border-radius: 15px;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(255, 75, 43, 0.6);
+      animation: pulse 1.8s infinite alternate;
+    }
+    .promo-banner h2 { margin: 0 0 5px 0; font-size: 1.4rem; color: #fff; text-shadow: 1px 1px 3px #000; }
+    .promo-banner p { margin: 5px 0; font-size: 0.95rem; }
+    .code-badge {
+      display: inline-block;
+      background: #ffeaa7;
+      color: #d63031;
+      font-weight: bold;
+      font-size: 1.2rem;
+      padding: 4px 12px;
+      border-radius: 8px;
+      margin-top: 5px;
+      border: 2px dashed #d63031;
+      letter-spacing: 1px;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.99); box-shadow: 0 0 10px rgba(255, 75, 43, 0.5); }
+      100% { transform: scale(1.02); box-shadow: 0 0 25px rgba(255, 234, 167, 0.9); }
+    }
+
     .auth-box, .trade-box, .redeem-box, .collection-section {
       background: rgba(255, 255, 255, 0.1);
       padding: 25px;
@@ -66,7 +96,6 @@
     .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
     .collection-item img { width: 100%; height: 60px; object-fit: cover; border-radius: 4px; }
     
-    /* Trade UI Styles */
     .trade-grid { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
     .trade-col { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 45%; }
   </style>
@@ -74,6 +103,14 @@
 <body>
 
   <div class="container">
+    
+    <!-- Banner โฆษณาแจกฟรี -->
+    <div class="promo-banner">
+      <h2>🔥 แจกฟรี! การ์ดระดับ UR สุดแรร์ 🔥</h2>
+      <p>แจกการ์ด <strong>Ryoma (Ailing Samurai - SNK)</strong> ลิมิเต็ดฟรี เพียงใส่โค้ดด้านล่างนี้!</p>
+      <div class="code-badge">โค้ด: snk</div>
+    </div>
+
     <h1>🎴 เกมสุ่มการ์ดวัดดวง (Online)</h1>
 
     <!-- Auth Box (Login / Register) -->
@@ -170,18 +207,15 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // รายการการ์ดทั้งหมดในเกม
     const cards = [
       { id: 1, title: 'Ryoma (Ailing Samurai - SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง คอลแลบพิเศษกับ SNK!', image: 'images/ryoma.png' },
       { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' }
     ];
 
-    // การ์ดที่มีสิทธิ์สุ่มได้จากตู้ทั่วไป (ไม่รวม ID 1 ที่เป็นของโค้ดลิมิเต็ด)
     const gachaPool = [
       { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' }
     ];
 
-    // รายการโค้ดแลกของ
     const promoCodes = {
       'snk': { cardId: 1, rewardName: 'Ryoma (Ailing Samurai - SNK)' }
     };
@@ -193,7 +227,6 @@
     let isFlipped = false;
     let currentTradeId = null;
 
-    // สลับโหมด ล็อกอิน / สมัครสมาชิก
     window.toggleAuthMode = function() {
       isRegisterMode = !isRegisterMode;
       document.getElementById('authTitle').innerText = isRegisterMode ? '📝 สมัครสมาชิก' : '🔑 เข้าสู่ระบบ';
@@ -201,7 +234,6 @@
       document.getElementById('toggleAuth').innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
     };
 
-    // จัดการการล็อกอิน / สมัครสมาชิก
     window.handleAuth = async function() {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
@@ -220,7 +252,6 @@
       }
     };
 
-    // เช็กสถานะการล็อกอินอัตโนมัติ
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
@@ -266,7 +297,6 @@
       updateTradeCardSelect();
     }
 
-    // --- ระบบ Redeem Code ---
     window.redeemCode = async function() {
       const inputCode = document.getElementById('redeemCodeInput').value.trim().toLowerCase();
       if (!inputCode) return alert('กรุณากรอกโค้ดก่อนครับ');
@@ -307,7 +337,6 @@
       document.getElementById('collectedCount').innerText = unlockedList.length;
     }
 
-    // --- ระบบการเทรด (TRADE SYSTEM) ---
     function updateTradeCardSelect() {
       const select = document.getElementById('myTradeCardSelect');
       select.innerHTML = '<option value="">-- เลือกการ์ดที่จะเสนอ --</option>';
@@ -469,7 +498,6 @@
       document.getElementById('myTradeCardSelect').value = '';
     }
 
-    // --- ระบบการสุ่มการ์ดหลัก ---
     window.drawCard = function() {
       const cardInner = document.getElementById('cardInner');
       const btn = document.getElementById('drawBtn');
@@ -485,7 +513,6 @@
     };
 
     async function randomizeAndFlip() {
-      // สุ่มการ์ดเฉพาะจาก gachaPool เท่านั้น ( Ryoma จะถูกแยกไว้สำหรับ Redeem Code )
       const randomIndex = Math.floor(Math.random() * gachaPool.length);
       const selectedCard = gachaPool[randomIndex];
 
