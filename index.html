@@ -150,6 +150,7 @@
     <div class="game-content" id="gameContent" style="display: none;">
       <div class="player-bar">
         <span>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></span>
+        <span>⚡ สปินคงเหลือ: <strong id="spinsDisplay" style="color: #f1c40f;">10</strong></span>
         <span>🎲 สุ่มไปแล้ว: <strong id="drawCountDisplay">0</strong> ครั้ง</span>
         <button class="btn-sm" onclick="logout()">ออกจากระบบ</button>
       </div>
@@ -166,7 +167,7 @@
         </div>
       </div>
 
-      <button id="drawBtn" onclick="drawCard()">🎲 สุ่มการ์ด</button>
+      <button id="drawBtn" onclick="drawCard()">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
 
       <!-- Section: Redeem Code -->
       <div class="redeem-box">
@@ -258,7 +259,7 @@
     let isRegisterMode = false;
     let currentUser = null;
     let username = '';
-    let playerData = { unlockedCards: [], usedCodes: [], drawCount: 0 };
+    let playerData = { unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
     let isFlipped = false;
     let currentTradeId = null;
 
@@ -297,8 +298,12 @@
 
         if (snapshot.exists()) {
           playerData = snapshot.val();
+          // กำหนดค่าเริ่มต้นถ้าบัญชีเดิมยังไม่มีสปิน
+          if (playerData.spins === undefined) {
+            playerData.spins = 10;
+          }
         } else {
-          playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0 };
+          playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
           await saveDataOnline();
         }
 
@@ -327,6 +332,7 @@
       document.getElementById('authBox').style.display = 'none';
       document.getElementById('gameContent').style.display = 'block';
       document.getElementById('playerDisplay').innerText = username;
+      document.getElementById('spinsDisplay').innerText = playerData.spins !== undefined ? playerData.spins : 10;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount || 0;
       initCollection();
       updateTradeCardSelect();
@@ -368,7 +374,6 @@
         item.className = `collection-item ${isUnlocked ? 'unlocked' : ''}`;
         item.innerHTML = `<img src="${card.image}" alt="${card.title}"><div style="font-size:0.7rem; font-weight:bold;">${card.title}</div>`;
         
-        // ถ้าปลดล็อกแล้ว ให้สามารถกดเปิดดูรูปการ์ดใหญ่ได้
         if (isUnlocked) {
           item.onclick = () => openCardModal(card);
         }
@@ -554,7 +559,14 @@
       document.getElementById('myTradeCardSelect').value = '';
     }
 
+    // --- ระบบการสุ่มการ์ดหลัก (ตรวจสอบและตัดสปิน) ---
     window.drawCard = function() {
+      // เช็กสปินก่อนสุ่ม
+      if (playerData.spins === undefined) playerData.spins = 10;
+      if (playerData.spins <= 0) {
+        return alert('❌ สปินของคุณหมดแล้ว!');
+      }
+
       const cardInner = document.getElementById('cardInner');
       const btn = document.getElementById('drawBtn');
       btn.disabled = true;
@@ -572,7 +584,11 @@
       const randomIndex = Math.floor(Math.random() * gachaPool.length);
       const selectedCard = gachaPool[randomIndex];
 
+      // หักสปิน และ เพิ่มสถิติการสุ่ม
+      playerData.spins -= 1;
       playerData.drawCount = (playerData.drawCount || 0) + 1;
+
+      document.getElementById('spinsDisplay').innerText = playerData.spins;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
 
       document.getElementById('cardRarity').innerText = selectedCard.rarity;
