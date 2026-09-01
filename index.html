@@ -176,6 +176,11 @@
       { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' }
     ];
 
+    // การ์ดที่มีสิทธิ์สุ่มได้จากตู้ทั่วไป (ไม่รวม ID 1 ที่เป็นของโค้ดลิมิเต็ด)
+    const gachaPool = [
+      { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' }
+    ];
+
     // รายการโค้ดแลกของ
     const promoCodes = {
       'snk': { cardId: 1, rewardName: 'Ryoma (Ailing Samurai - SNK)' }
@@ -280,7 +285,7 @@
       playerData.usedCodes.push(inputCode);
       await saveDataOnline();
 
-      alert(`🎉 ยินดีด้วย! คุณได้รับรับการ์ด: ${codeData.rewardName}`);
+      alert(`🎉 ยินดีด้วย! คุณได้รับรับการ์ดลิมิเต็ด: ${codeData.rewardName}`);
       document.getElementById('redeemCodeInput').value = '';
       initCollection();
       updateTradeCardSelect();
@@ -480,9 +485,9 @@
     };
 
     async function randomizeAndFlip() {
-      // สุ่มการ์ดจากรายการ cards
-      const randomIndex = Math.floor(Math.random() * cards.length);
-      const selectedCard = cards[randomIndex];
+      // สุ่มการ์ดเฉพาะจาก gachaPool เท่านั้น ( Ryoma จะถูกแยกไว้สำหรับ Redeem Code )
+      const randomIndex = Math.floor(Math.random() * gachaPool.length);
+      const selectedCard = gachaPool[randomIndex];
 
       playerData.drawCount = (playerData.drawCount || 0) + 1;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
