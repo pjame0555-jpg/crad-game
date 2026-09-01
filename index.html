@@ -103,16 +103,16 @@
     </div>
   </div>
 
-  <!-- นำเข้า Firebase SDK และใส่คีย์ของคุณ -->
+  <!-- นำเข้า Firebase SDK และตั้งค่าเซิร์ฟเวอร์ -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // คีย์ Firebase จากโปรเจกต์ของคุณ
+    // แก้ไข databaseURL ให้ตรงกับเซิร์ฟเวอร์ us-central1 ของคุณเรียบร้อยแล้ว
     const firebaseConfig = {
       apiKey: "AIzaSyANzE04i1AQXO8oqUP6i8oqfMNW1GQlhB4",
       authDomain: "my-game-card.firebaseapp.com",
-      databaseURL: "https://my-game-card-default-rtdb.asia-southeast1.firebasedatabase.app",
+      databaseURL: "https://my-game-card-default-rtdb.firebaseio.com",
       projectId: "my-game-card",
       storageBucket: "my-game-card.firebasestorage.app",
       messagingSenderId: "718520908168",
@@ -154,7 +154,7 @@
         showGameContent();
       } catch (error) {
         console.error("Firebase Error:", error);
-        alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการตั้งค่า Realtime Database บน Firebase");
+        alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการตั้งค่า Rules บน Firebase ให้เป็น true");
       }
     };
 
@@ -243,3 +243,4 @@
   </script>
 </body>
 </html>
+    
