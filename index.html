@@ -205,7 +205,8 @@
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
-        username = user.email.split('@')[0].replace(/[^a-zA- Thai]/g, '_'); // ใช้ชื่อก่อน @ เป็น Username
+        // แปลงชื่อผู้ใช้จากอีเมลแบบปลอดภัย
+        username = user.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
         
         const dbRef = ref(db);
         const snapshot = await get(child(dbRef, `users/${user.uid}`));
