@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง (Online & Trade)</title>
+  <title>เกมสุ่มการ์ดวัดดวง (Login System)</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -17,19 +17,21 @@
       padding: 20px 0;
     }
     .container { text-align: center; width: 90%; max-width: 600px; }
-    .login-box, .trade-box, .collection-section {
+    .auth-box, .trade-box, .collection-section {
       background: rgba(255, 255, 255, 0.1);
-      padding: 20px;
+      padding: 25px;
       border-radius: 15px;
       backdrop-filter: blur(10px);
       margin-top: 20px;
     }
-    input, select {
-      padding: 10px;
+    input {
+      padding: 10px 15px;
       font-size: 1rem;
       border-radius: 8px;
       border: 1px solid #ccc;
-      margin: 5px;
+      width: 80%;
+      margin-bottom: 12px;
+      box-sizing: border-box;
     }
     .player-bar {
       background: rgba(255, 255, 255, 0.1);
@@ -54,17 +56,13 @@
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #333; color: #fff; padding: 2px 8px; border-radius: 10px; }
     .card-back img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; margin-top: 15px; }
     button { background-color: #e74c3c; color: white; border: none; padding: 10px 20px; font-size: 1rem; border-radius: 20px; cursor: pointer; margin: 5px; }
-    button:disabled { background-color: #7f8c8d; cursor: not-allowed; }
-    .btn-sm { padding: 5px 12px; font-size: 0.8rem; border-radius: 12px; background-color: #7f8c8d; }
     .btn-green { background-color: #2ecc71; }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; border-radius: 12px; background-color: #7f8c8d; }
+    .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
     .collection-item { background: #2a2a40; border-radius: 8px; padding: 8px; opacity: 0.3; filter: grayscale(100%); transition: all 0.3s; }
     .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
     .collection-item img { width: 100%; height: 60px; object-fit: cover; border-radius: 4px; }
-    
-    /* Trade UI Styles */
-    .trade-grid { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
-    .trade-col { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 45%; }
   </style>
 </head>
 <body>
@@ -72,18 +70,21 @@
   <div class="container">
     <h1>🎴 เกมสุ่มการ์ดวัดดวง (Online)</h1>
 
-    <!-- Login -->
-    <div class="login-box" id="loginBox">
-      <h2>👤 กรอกชื่อผู้เล่นเพื่อเริ่มเล่น</h2>
-      <input type="text" id="usernameInput" placeholder="พิมพ์ชื่อผู้เล่น..." maxlength="15"><br>
-      <button onclick="login()">เข้าสู่ระบบ</button>
+    <!-- Auth Box (Login / Register) -->
+    <div class="auth-box" id="authBox">
+      <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
+      <input type="email" id="emailInput" placeholder="อีเมล (เช่น user@game.com)"><br>
+      <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)"><br>
+      
+      <button id="authBtn" onclick="handleAuth()">เข้าสู่ระบบ</button><br><br>
+      <span class="toggle-link" id="toggleAuth" onclick="toggleAuthMode()">ยังไม่มีบัญชี? สมัครสมาชิกที่นี่</span>
     </div>
 
-    <!-- Main Game -->
+    <!-- Main Game UI -->
     <div class="game-content" id="gameContent" style="display: none;">
       <div class="player-bar">
-        <span>👤: <strong id="playerDisplay">-</strong></span>
-        <span>🎲 สุ่ม: <strong id="drawCountDisplay">0</strong> ครั้ง</span>
+        <span>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></span>
+        <span>🎲 สุ่มไปแล้ว: <strong id="drawCountDisplay">0</strong> ครั้ง</span>
         <button class="btn-sm" onclick="logout()">ออกจากระบบ</button>
       </div>
 
@@ -101,33 +102,6 @@
 
       <button id="drawBtn" onclick="drawCard()">🎲 สุ่มการ์ด</button>
 
-      <!-- Section: Trade System -->
-      <div class="trade-box">
-        <h2>🔄 ระบบแลกเปลี่ยนการ์ด (Trade)</h2>
-        <div id="tradeInit">
-          <input type="text" id="targetPlayerInput" placeholder="พิมพ์ชื่อเพื่อนที่จะเทรด...">
-          <button class="btn-green" onclick="startTrade()">สร้างห้องเทรด</button>
-        </div>
-
-        <div id="tradeRoom" style="display: none;">
-          <p>กำลังเทรดกับ: <strong id="partnerName">-</strong></p>
-          <div class="trade-grid">
-            <div class="trade-col">
-              <h4>การ์ดของคุณ</h4>
-              <select id="myTradeCardSelect" onchange="updateMyOffer()"></select>
-              <p id="myOfferStatus">สถานะ: รอการเลือก</p>
-            </div>
-            <div class="trade-col">
-              <h4>การ์ดของอีกฝ่าย</h4>
-              <p id="partnerOfferCard">ยังไม่เลือกการ์ด</p>
-              <p id="partnerOfferStatus">สถานะ: รอเลือก</p>
-            </div>
-          </div>
-          <button id="confirmTradeBtn" class="btn-green" onclick="confirmTrade()">✅ ยืนยันการเทรด</button>
-          <button onclick="cancelTrade()">❌ ยกเลิก</button>
-        </div>
-      </div>
-
       <!-- Collection -->
       <div class="collection-section">
         <h2>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h2>
@@ -138,7 +112,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyANzE04i1AQXO8oqUP6i8oqfMNW1GQlhB4",
@@ -152,56 +127,87 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
 
     const cards = [
       { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' }
     ];
 
-    let playerData = { username: '', unlockedCards: [], drawCount: 0 };
+    let isRegisterMode = false;
+    let currentUser = null;
+    let playerData = { unlockedCards: [], drawCount: 0 };
     let isFlipped = false;
-    let currentTradeId = null;
-    let tradeListener = null;
 
-    window.login = async function() {
-      const usernameInput = document.getElementById('usernameInput').value.trim();
-      if (!usernameInput) return alert('กรุณากรอกชื่อผู้เล่นก่อนครับ');
+    // สลับโหมด ล็อกอิน / สมัครสมาชิก
+    window.toggleAuthMode = function() {
+      isRegisterMode = !isRegisterMode;
+      document.getElementById('authTitle').innerText = isRegisterMode ? '📝 สมัครสมาชิก' : '🔑 เข้าสู่ระบบ';
+      document.getElementById('authBtn').innerText = isRegisterMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
+      document.getElementById('toggleAuth').innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
+    };
 
-      playerData.username = usernameInput;
-      const dbRef = ref(db);
+    // จัดการการล็อกอิน / สมัครสมาชิก
+    window.handleAuth = async function() {
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+
+      if (!email || !password) return alert('กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
+
       try {
-        const snapshot = await get(child(dbRef, `players/${usernameInput}`));
-        if (snapshot.exists()) {
-          playerData = snapshot.val();
+        if (isRegisterMode) {
+          // สมัครสมาชิกใหม่
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          alert('สมัครสมาชิกสำเร็จ!');
         } else {
-          await saveDataOnline();
+          // เข้าสู่ระบบ
+          await signInWithEmailAndPassword(auth, email, password);
         }
-        showGameContent();
-        listenForTradeRequests();
       } catch (error) {
-        alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
+        alert('เกิดข้อผิดพลาด: ' + error.message);
       }
     };
 
+    // เช็กสถานะการล็อกอินอัตโนมัติ (อยู่นานแค่ไหนก็ไม่ต้องล็อกอินซ้ำ)
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        const uid = user.uid;
+        
+        // ดึงข้อมูลการเล่นของผู้เล่นจาก UID
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, `users/${uid}`));
+
+        if (snapshot.exists()) {
+          playerData = snapshot.val();
+        } else {
+          playerData = { email: user.email, unlockedCards: [], drawCount: 0 };
+          await saveDataOnline();
+        }
+
+        showGameContent();
+      } else {
+        currentUser = null;
+        document.getElementById('authBox').style.display = 'block';
+        document.getElementById('gameContent').style.display = 'none';
+      }
+    });
+
     window.logout = function() {
-      if (currentTradeId) cancelTrade();
-      document.getElementById('loginBox').style.display = 'block';
-      document.getElementById('gameContent').style.display = 'none';
-      document.getElementById('usernameInput').value = '';
+      signOut(auth);
     };
 
     async function saveDataOnline() {
-      if (!playerData.username) return;
-      await set(ref(db, 'players/' + playerData.username), playerData);
+      if (!currentUser) return;
+      await set(ref(db, 'users/' + currentUser.uid), playerData);
     }
 
     function showGameContent() {
-      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('authBox').style.display = 'none';
       document.getElementById('gameContent').style.display = 'block';
-      document.getElementById('playerDisplay').innerText = playerData.username;
+      document.getElementById('playerDisplay').innerText = currentUser.email.split('@')[0];
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount || 0;
       initCollection();
-      updateTradeCardSelect();
     }
 
     function initCollection() {
@@ -220,178 +226,6 @@
       document.getElementById('collectedCount').innerText = unlockedList.length;
     }
 
-    // --- ระบบการเทรด (TRADE SYSTEM) ---
-    function updateTradeCardSelect() {
-      const select = document.getElementById('myTradeCardSelect');
-      select.innerHTML = '<option value="">-- เลือกการ์ดที่จะเสนอ --</option>';
-      const unlockedList = playerData.unlockedCards || [];
-      
-      cards.forEach(card => {
-        if (unlockedList.includes(card.id)) {
-          select.innerHTML += `<option value="${card.id}">${card.title} (${card.rarity})</option>`;
-        }
-      });
-    }
-
-    window.startTrade = async function() {
-      const targetPlayer = document.getElementById('targetPlayerInput').value.trim();
-      if (!targetPlayer) return alert('กรุณากรอกชื่อเพื่อนก่อนครับ');
-      if (targetPlayer === playerData.username) return alert('ไม่สามารถเทรดกับตัวเองได้');
-
-      // ตรวจสอบว่าผู้เล่นปลายทางมีจริงไหม
-      const snapshot = await get(child(ref(db), `players/${targetPlayer}`));
-      if (!snapshot.exists()) return alert('ไม่พบชื่อผู้เล่นนี้ในระบบ');
-
-      // สร้าง ID ห้องเทรด
-      currentTradeId = [playerData.username, targetPlayer].sort().join('_trade_');
-      
-      const tradeData = {
-        p1: playerData.username,
-        p2: targetPlayer,
-        p1_card: null,
-        p2_card: null,
-        p1_confirm: false,
-        p2_confirm: false,
-        status: 'active'
-      };
-
-      await set(ref(db, `trades/${currentTradeId}`), tradeData);
-      openTradeUI(targetPlayer);
-    };
-
-    function listenForTradeRequests() {
-      // คอยฟังคำชวนเทรดจากผู้เล่นคนอื่น
-      const tradesRef = ref(db, 'trades');
-      onValue(tradesRef, (snapshot) => {
-        if (!snapshot.exists() || currentTradeId) return;
-        const allTrades = snapshot.val();
-        for (let id in allTrades) {
-          const trade = allTrades[id];
-          if ((trade.p1 === playerData.username || trade.p2 === playerData.username) && trade.status === 'active') {
-            const partner = trade.p1 === playerData.username ? trade.p2 : trade.p1;
-            if (confirm(`ผู้เล่น ${partner} ชวนคุณเทรดการ์ด ต้องการเข้าร่วมหรือไม่?`)) {
-              currentTradeId = id;
-              openTradeUI(partner);
-            }
-            break;
-          }
-        }
-      });
-    }
-
-    function openTradeUI(partnerName) {
-      document.getElementById('tradeInit').style.display = 'none';
-      document.getElementById('tradeRoom').style.display = 'block';
-      document.getElementById('partnerName').innerText = partnerName;
-      updateTradeCardSelect();
-
-      // ฟังก์ชัน Realtime ฟังการเปลี่ยนแปลงในห้องเทรด
-      const tradeRef = ref(db, `trades/${currentTradeId}`);
-      tradeListener = onValue(tradeRef, async (snapshot) => {
-        if (!snapshot.exists()) {
-          alert('การเทรดถูกยกเลิกแล้ว');
-          resetTradeUI();
-          return;
-        }
-
-        const data = snapshot.val();
-        const isP1 = playerData.username === data.p1;
-        const myCard = isP1 ? data.p1_card : data.p2_card;
-        const partnerCard = isP1 ? data.p2_card : data.p1_card;
-        const myConfirm = isP1 ? data.p1_confirm : data.p2_confirm;
-        const partnerConfirm = isP1 ? data.p2_confirm : data.p1_confirm;
-
-        // อัปเดตฝั่งคู่เทรด
-        if (partnerCard) {
-          const cObj = cards.find(c => c.id == partnerCard);
-          document.getElementById('partnerOfferCard').innerText = `${cObj.title} (${cObj.rarity})`;
-        } else {
-          document.getElementById('partnerOfferCard').innerText = 'ยังไม่เลือกการ์ด';
-        }
-        document.getElementById('partnerOfferStatus').innerText = partnerConfirm ? '✅ ยืนยันแล้ว' : '⏳ กำลังเลือก/รอการยืนยัน';
-
-        // เช็กถ้าทั้งคู่กด Confirm ครบ
-        if (data.p1_confirm && data.p2_confirm && data.status === 'active') {
-          await executeTradeSwap(data);
-        }
-      });
-    }
-
-    window.updateMyOffer = async function() {
-      if (!currentTradeId) return;
-      const cardId = document.getElementById('myTradeCardSelect').value;
-      const snapshot = await get(child(ref(db), `trades/${currentTradeId}`));
-      if (!snapshot.exists()) return;
-
-      const data = snapshot.val();
-      const isP1 = playerData.username === data.p1;
-
-      if (isP1) {
-        data.p1_card = cardId ? parseInt(cardId) : null;
-        data.p1_confirm = false; // รีเซ็ตการยืนยันถ้าเปลี่ยนการ์ด
-      } else {
-        data.p2_card = cardId ? parseInt(cardId) : null;
-        data.p2_confirm = false;
-      }
-
-      await set(ref(db, `trades/${currentTradeId}`), data);
-    };
-
-    window.confirmTrade = async function() {
-      const cardId = document.getElementById('myTradeCardSelect').value;
-      if (!cardId) return alert('กรุณาเลือกการ์ดที่จะนำมาแลกเปลี่ยนก่อนครับ');
-
-      const snapshot = await get(child(ref(db), `trades/${currentTradeId}`));
-      if (!snapshot.exists()) return;
-
-      const data = snapshot.val();
-      if (playerData.username === data.p1) data.p1_confirm = true;
-      else data.p2_confirm = true;
-
-      await set(ref(db, `trades/${currentTradeId}`), data);
-      document.getElementById('confirmTradeBtn').disabled = true;
-    };
-
-    async function executeTradeSwap(tradeData) {
-      // ทำการสลับการ์ดในระบบ
-      tradeData.status = 'completed';
-      await set(ref(db, `trades/${currentTradeId}`), tradeData);
-
-      const isP1 = playerData.username === tradeData.p1;
-      const giveCardId = isP1 ? tradeData.p1_card : tradeData.p2_card;
-      const getCardId = isP1 ? tradeData.p2_card : tradeData.p1_card;
-
-      // เอาการ์ดเก่าออก เพิ่มการ์ดใหม่เข้า
-      playerData.unlockedCards = playerData.unlockedCards.filter(id => id !== giveCardId);
-      if (!playerData.unlockedCards.includes(getCardId)) {
-        playerData.unlockedCards.push(getCardId);
-      }
-
-      await saveDataOnline();
-      alert('🎉 แลกเปลี่ยนการ์ดเรียบร้อยแล้ว!');
-
-      // ลบห้องเทรดทิ้ง
-      await remove(ref(db, `trades/${currentTradeId}`));
-      resetTradeUI();
-      initCollection();
-    }
-
-    window.cancelTrade = async function() {
-      if (currentTradeId) {
-        await remove(ref(db, `trades/${currentTradeId}`));
-      }
-      resetTradeUI();
-    };
-
-    function resetTradeUI() {
-      currentTradeId = null;
-      document.getElementById('tradeInit').style.display = 'block';
-      document.getElementById('tradeRoom').style.display = 'none';
-      document.getElementById('confirmTradeBtn').disabled = false;
-      document.getElementById('myTradeCardSelect').value = '';
-    }
-
-    // --- ระบบการสุ่มการ์ดหลัก ---
     window.drawCard = function() {
       const cardInner = document.getElementById('cardInner');
       const btn = document.getElementById('drawBtn');
@@ -423,7 +257,6 @@
 
       await saveDataOnline();
       initCollection();
-      updateTradeCardSelect();
 
       document.getElementById('cardInner').classList.add('flipped');
       isFlipped = true;
