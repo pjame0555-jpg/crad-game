@@ -117,13 +117,13 @@
 
     <div class="auth-box" id="authBox">
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
-      <form id="authForm">
+      <div id="authForm">
         <input type="email" id="emailInput" placeholder="อีเมล (เช่น user@game.com)" required><br>
         <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" required><br>
         
-        <button type="submit" id="authBtn">เข้าสู่ระบบ</button><br>
+        <button type="button" id="authBtn">เข้าสู่ระบบ</button><br>
         <span class="toggle-link" id="toggleAuth">ยังไม่มีบัญชี? สมัครสมาชิกที่นี่</span>
-      </form>
+      </div>
     </div>
 
     <div id="gameContent" style="display: none;">
@@ -264,7 +264,6 @@
     let currentLeaderboardTab = 'cards';
     let allUsersCache = {};
 
-    const authForm = document.getElementById('authForm');
     const authTitle = document.getElementById('authTitle');
     const authBtn = document.getElementById('authBtn');
     const toggleAuth = document.getElementById('toggleAuth');
@@ -277,10 +276,14 @@
       toggleAuth.innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
     });
 
-    authForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    authBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
+
+      if (!email || !password) {
+        alert('❌ กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
+        return;
+      }
 
       authBtn.disabled = true;
       authBtn.innerText = 'กำลังประมวลผล...';
@@ -306,8 +309,6 @@
         currentUser = user;
         username = user.email ? user.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : 'user_' + user.uid.substring(0, 5);
         
-        showGameContent();
-
         try {
           const snapshot = await db.ref(`users/${user.uid}`).once('value');
           if (snapshot.exists()) {
@@ -411,4 +412,4 @@
       document.getElementById('q2Btn').disabled = claimed.includes(2) || q2 < 3;
     }
 
-    document.getEle
+    document.getElemen
