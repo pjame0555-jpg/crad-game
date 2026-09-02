@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ด Ultimate Edition + PvP/PvE เทิร์นแบทเทิล</title>
+  <title>เกมสุ่มการ์ด Ultimate Edition + จัดเด็คเลือกการ์ด</title>
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -79,6 +79,13 @@
     .collection-item { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 8px; opacity: 0.35; filter: grayscale(100%); transition: all 0.3s; cursor: pointer; }
     .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
     .collection-item img { width: 100%; height: 65px; object-fit: cover; border-radius: 6px; }
+    
+    /* Deck Builder Selectable Grid */
+    .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin: 12px 0; }
+    .deck-select-item { background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .deck-select-item.selected { border-color: #2ecc71; background: rgba(46, 204, 113, 0.2); box-shadow: 0 0 10px rgba(46, 204, 113, 0.5); }
+    .deck-select-item img { width: 100%; height: 80px; object-fit: cover; border-radius: 6px; }
+
     .leaderboard-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
     .leaderboard-tab { background: rgba(255,255,255,0.15); border: none; padding: 6px 15px; border-radius: 20px; color: #fff; cursor: pointer; }
     .leaderboard-tab.active { background: #f1c40f; color: #333; font-weight: bold; }
@@ -100,7 +107,7 @@
       <div class="code-badge">โค้ด: snk</div>
     </div>
 
-    <h1>🎴 เกมสุ่มการ์ด & ลานประลอง Turn-Based Ultimate</h1>
+    <h1>🎴 เกมสุ่มการ์ด & จัดเด็คต่อสู้ Turn-Based</h1>
 
     <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
@@ -145,10 +152,9 @@
 
       <!-- PVE TURN-BASED BATTLE SYSTEM -->
       <div class="battle-box" style="border: 2px dashed #e74c3c;">
-        <h3>⚔️ ลานประลอง PvE (สู้เป็นเทิร์นจนกว่าการ์ดหมดมือ)</h3>
-        <p style="font-size: 0.9rem; color: #ddd;">เลือกระดับความยากของบอส และลุยเคลียร์เด็ค</p>
+        <h3>⚔️ ลานประลอง PvE (เลือกการ์ดจัดเด็คสู้บอส)</h3>
         
-        <div style="margin-bottom: 10px;">
+        <div style="margin-bottom: 12px;">
           <label>⚙️ เลือกระดับความยากบอส: </label><br>
           <select id="pveDifficultySelect">
             <option value="easy">🟢 Easy (ง่าย)</option>
@@ -171,8 +177,14 @@
           </div>
         </div>
 
+        <!-- เลือกการ์ดจัดเด็ค PvE -->
+        <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; margin-bottom: 15px; text-align: left;">
+          <p style="margin: 0 0 8px 0; font-size: 0.9rem; color: #f1c40f; font-weight: bold;">🎴 เลือกการ์ดลงเด็คของคุณ (คลิกเพื่อเลือก/ยกเลิก):</p>
+          <div class="deck-grid" id="pveDeckSelectGrid"></div>
+        </div>
+
         <div id="pveSetupArea">
-          <button class="btn-green" id="startPveMatchBtn">🎮 เริ่มเปิดศึก PvE (สู้จนการ์ดหมดมือ)</button>
+          <button class="btn-green" id="startPveMatchBtn">🎮 เริ่มเปิดศึก PvE ด้วยเด็คที่เลือก</button>
         </div>
 
         <!-- หน้าต่างต่อสู้แบบเทิร์น PvE -->
@@ -204,10 +216,17 @@
 
       <!-- PVP BATTLE SYSTEM (REALTIME TURN-BASED) -->
       <div class="battle-box" style="border: 2px dashed #3498db;">
-        <h3>🛡️ ลานประลอง PvP (ดวลเด็ค Realtime จนกว่าฝ่ายใดฝ่ายหนึ่งการ์ดหมดมือ)</h3>
+        <h3>🛡️ ลานประลอง PvP (เลือกเด็คดวล Realtime)</h3>
         <div id="pvpInit">
           <input type="text" id="targetPvpInput" placeholder="พิมพ์ชื่อผู้เล่นอื่นที่จะท้าดวล ..."><br>
-          <button class="btn-blue" id="startPvpBtn">⚔️ สร้างห้องท้าดวล PvP</button>
+          
+          <!-- เลือกการ์ดจัดเด็ค PvP -->
+          <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; margin: 12px 0; text-align: left;">
+            <p style="margin: 0 0 8px 0; font-size: 0.9rem; color: #3498db; font-weight: bold;">🎴 เลือกการ์ดลงเด็ค PvP ของคุณ:</p>
+            <div class="deck-grid" id="pvpDeckSelectGrid"></div>
+          </div>
+
+          <button class="btn-blue" id="startPvpBtn">⚔️ สร้างห้องท้าดวล PvP ด้วยเด็คที่เลือก</button>
         </div>
         <div id="pvpRoom" style="display: none;">
           <p>คู่ดวล: <strong id="pvpPartnerName">-</strong></p>
@@ -367,6 +386,9 @@
     let currentBoss = null;
     let currentPvpId = null;
 
+    let selectedPveCardIds = [];
+    let selectedPvpCardIds = [];
+
     // PvE Battle State
     let battleState = {
       activeCardsQueue: [],
@@ -457,6 +479,7 @@
       updateQuestUI();
       initCollection();
       generateBoss();
+      renderDeckSelectors();
     }
 
     function updatePityDisplay() {
@@ -498,6 +521,7 @@
       await saveDataOnline();
       updateQuestUI();
       initCollection();
+      renderDeckSelectors();
 
       document.getElementById('cardInner').classList.add('flipped');
     });
@@ -540,6 +564,7 @@
       alert(`🎉 ได้รับการ์ดลิมิเต็ด: ${codeData.rewardName}`);
       document.getElementById('redeemCodeInput').value = '';
       initCollection();
+      renderDeckSelectors();
     });
 
     function initCollection() {
@@ -557,6 +582,53 @@
         grid.appendChild(item);
       });
       document.getElementById('collectedCount').innerText = unlocked.length;
+    }
+
+    function renderDeckSelectors() {
+      const unlocked = playerData.unlockedCards || [];
+      const pveGrid = document.getElementById('pveDeckSelectGrid');
+      const pvpGrid = document.getElementById('pvpDeckSelectGrid');
+      pveGrid.innerHTML = '';
+      pvpGrid.innerHTML = '';
+
+      if (unlocked.length === 0) {
+        pveGrid.innerHTML = '<p style="color: #aaa; font-size: 0.85rem;">ยังไม่มีการ์ดปลดล็อก</p>';
+        pvpGrid.innerHTML = '<p style="color: #aaa; font-size: 0.85rem;">ยังไม่มีการ์ดปลดล็อก</p>';
+        return;
+      }
+
+      unlocked.forEach(id => {
+        const c = cards.find(item => item.id === id);
+        if (!c) return;
+
+        // PvE Item
+        const pveItem = document.createElement('div');
+        pveItem.className = `deck-select-item ${selectedPveCardIds.includes(id) ? 'selected' : ''}`;
+        pveItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div>`;
+        pveItem.addEventListener('click', () => {
+          if (selectedPveCardIds.includes(id)) {
+            selectedPveCardIds = selectedPveCardIds.filter(i => i !== id);
+          } else {
+            selectedPveCardIds.push(id);
+          }
+          renderDeckSelectors();
+        });
+        pveGrid.appendChild(pveItem);
+
+        // PvP Item
+        const pvpItem = document.createElement('div');
+        pvpItem.className = `deck-select-item ${selectedPvpCardIds.includes(id) ? 'selected' : ''}`;
+        pvpItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div>`;
+        pvpItem.addEventListener('click', () => {
+          if (selectedPvpCardIds.includes(id)) {
+            selectedPvpCardIds = selectedPvpCardIds.filter(i => i !== id);
+          } else {
+            selectedPvpCardIds.push(id);
+          }
+          renderDeckSelectors();
+        });
+        pvpGrid.appendChild(pvpItem);
+      });
     }
 
     function openModal(c) {
@@ -600,10 +672,9 @@
     document.getElementById('pveDifficultySelect').addEventListener('change', generateBoss);
 
     document.getElementById('startPveMatchBtn').addEventListener('click', () => {
-      const unlocked = playerData.unlockedCards || [];
-      if (unlocked.length === 0) return alert('❌ คุณยังไม่มีการ์ด! กรุณาสุ่มหรือใส่โค้ดก่อน');
+      if (selectedPveCardIds.length === 0) return alert('❌ กรุณาเลือกการ์ดลงเด็คอย่างน้อย 1 ใบ!');
 
-      battleState.activeCardsQueue = unlocked.map(id => {
+      battleState.activeCardsQueue = selectedPveCardIds.map(id => {
         const c = cards.find(item => item.id === id);
         return { ...c };
       });
@@ -625,7 +696,7 @@
 
     function loadNextPveCard() {
       if (battleState.currentCardIndex >= battleState.activeCardsQueue.length) {
-        endPveBattle(false, 'การ์ดในเด็คหมดเกลี้ยง พ่ายแพ้ต่อบอส!');
+        endPveBattle(false, 'การ์ดในเด็คที่คุณเลือกหมดเกลี้ยง พ่ายแพ้ต่อบอส!');
         return;
       }
       const activeCard = battleState.activeCardsQueue[battleState.currentCardIndex];
@@ -675,7 +746,7 @@
           dmg = 50;
           logPve(`✨ ใช้สกิล [ยิกๆ] ดาเมจ 50 บอสติดเลือดไหล 3 เทิร์น`);
           battleState.bossBleedTurns = 3;
-        } else if (card.id === 3) { // Reiko: กระจกมรณะ (PvE ตีตัวเดี่ยวบอสแรงสะใจ 120)
+        } else if (card.id === 3) { // Reiko: กระจกมรณะ
           dmg = 120;
           logPve(`✨ ใช้สกิล [กระจกมรณะ] ดาเมจหนักหน่วง 120`);
         }
@@ -767,12 +838,11 @@
       const snap = await db.ref(`usernames/${target}`).once('value');
       if (!snap.exists()) return alert('❌ ไม่พบผู้เล่นนี้ในระบบ');
 
-      const unlocked = playerData.unlockedCards || [];
-      if (unlocked.length === 0) return alert('❌ คุณยังไม่มีการ์ดสำหรับดวล!');
+      if (selectedPvpCardIds.length === 0) return alert('❌ กรุณาเลือกการ์ดลงเด็ค PvP อย่างน้อย 1 ใบ!');
 
       currentPvpId = [username, target].sort().join('_pvp_');
       
-      const myDeck = unlocked.map(id => {
+      const myDeck = selectedPvpCardIds.map(id => {
         const c = cards.find(item => item.id === id);
         return { ...c, currentHp: c.hp };
       });
@@ -797,12 +867,14 @@
         for (let id in rooms) {
           const room = rooms[id];
           if (room.p2 === username && room.status === 'waiting') {
-            const unlocked = playerData.unlockedCards || [];
-            if (unlocked.length === 0) continue;
+            if (selectedPvpCardIds.length === 0) {
+              alert('⚠️ มีคำท้าดวล PvP เข้ามา แต่คุณยังไม่ได้เลือกเด็คการ์ด! กรุณาเลือกการ์ดก่อนกดยืนยัน');
+              continue;
+            }
             
             if (confirm(`🛡️ ผู้เล่น ${room.p1} ท้าดวล PvP กับคุณ ยืนยันเข้าร่วมหรือไม่?`)) {
               currentPvpId = id;
-              const myDeck = unlocked.map(i => {
+              const myDeck = selectedPvpCardIds.map(i => {
                 const c = cards.find(item => item.id === i);
                 return { ...c, currentHp: c.hp };
               });
@@ -901,7 +973,6 @@
       let dmg = 0;
       let logMsg = '';
 
-      // เช็คเลือดไหลตาก่อนหน้า
       let bleedKey = isP1 ? 'p1_bleed' : 'p2_bleed';
       if (data[bleedKey] > 0) {
         let bDmg = Math.round(myCard.hp * 0.1);
@@ -916,15 +987,14 @@
           enemyCard.currentHp = Math.max(0, enemyCard.currentHp - dmg);
           logMsg += `${username} ใช้ ${myCard.title} โจมตี ${enemyCard.title} ได้รับ ${dmg} ดาเมจ (HP ศัตรูเหลือ ${enemyCard.currentHp})`;
         } else if (actionType === 'skill') {
-          if (myCard.id === 1) { // SNK: ยิกๆ
+          if (myCard.id === 1) { // SNK
             dmg = 50;
             enemyCard.currentHp = Math.max(0, enemyCard.currentHp - dmg);
             let targetBleedKey = isP1 ? 'p2_bleed' : 'p1_bleed';
             data[targetBleedKey] = 3;
             logMsg += `${username} ใช้สกิล [ยิกๆ] ดาเมจ 50 ใส่ ${enemyCard.title} และทำให้ติดเลือดไหล!`;
-          } else if (myCard.id === 3) { // Reiko: กระจกมรณะ (โจมตีทุกการ์ดในมือของศัตรู)
+          } else if (myCard.id === 3) { // Reiko (โจมตีทุกการ์ดของศัตรู)
             dmg = 120;
-            // โจมตีการ์ดทุกใบที่เหลือในเด็คของศัตรู
             for (let i = enemyIdx; i < enemyDeck.length; i++) {
               enemyDeck[i].currentHp = Math.max(0, enemyDeck[i].currentHp - dmg);
             }
@@ -933,16 +1003,13 @@
         }
       }
 
-      // เช็คตาย/Passive ฝ่ายตรงข้าม
       if (enemyCard.currentHp <= 0) {
-        // Reiko Passive เกิดใหม่
         let enemyRevivedKey = isP1 ? 'p2_revived' : 'p1_revived';
         if (enemyCard.id === 3 && !data[enemyRevivedKey]) {
           data[enemyRevivedKey] = true;
           enemyCard.currentHp = Math.round(enemyCard.hp * 0.5);
           logMsg += ` | ✨ Reiko ฝ่ายตรงข้ามฟื้นคืนชีพ 50% HP!`;
         } else {
-          // ปีศาจขุมนรก Passive ตายลากศัตรูเสียบ 50% HP ทันทีไม่มีข้อยกเว้น
           if (enemyCard.id === 2) {
             let instantDmg = Math.round(myCard.hp * 0.5);
             myCard.currentHp = Math.max(0, myCard.currentHp - instantDmg);
@@ -953,7 +1020,6 @@
         }
       }
 
-      // เช็คตัวเราตาย (กรณีโดนปีศาจขุมนรกสวน)
       let myRevivedKey = isP1 ? 'p1_revived' : 'p2_revived';
       if (myCard.currentHp <= 0) {
         if (myCard.id === 3 && !data[myRevivedKey]) {
@@ -966,7 +1032,6 @@
         }
       }
 
-      // อัปเดตกลับเข้า DB
       if (isP1) {
         data.p1_deck = myDeck; data.p2_deck = enemyDeck;
         data.p1_idx = myIdx; data.p2_idx = enemyIdx;
@@ -977,16 +1042,12 @@
 
       data.log = logMsg;
 
-      // เช็คจบเกมหรือยัง (การ์ดหมดเด็ค)
       if (myIdx >= myDeck.length && enemyIdx >= enemyDeck.length) {
         data.status = 'completed';
         data.log = '🤝 เสมอกัน! การ์ดหมดมือพร้อมกัน';
       } else if (myIdx >= myDeck.length) {
         data.status = 'completed';
         data.log = `💀 ผู้เล่น ${data.p2 === username ? data.p1 : data.p2} เป็นฝ่ายชนะเนื่องจากการ์ดคุณหมดมือ!`;
-        if (data.p2 === username) {
-          // แจกสปินถ้า p2 ชนะ หรือถ้า p1 ชนะจัดการฝั่งตัวเอง
-        }
       } else if (enemyIdx >= enemyDeck.length) {
         data.status = 'completed';
         data.log = `🎉 ยอดเยี่ยม! ${username} เป็นฝ่ายชนะการดวลเด็ค PvP! (+2 สปิน)`;
