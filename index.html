@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition + Battle</title>
 
+  <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -28,7 +29,7 @@
       font-weight: bold; font-size: 1.2rem; padding: 4px 15px;
       border-radius: 8px; margin-top: 5px; border: 2px dashed #d63031;
     }
-    .auth-box, .trade-box, .redeem-box, .collection-section, .leaderboard-box, .quest-box {
+    .auth-box, .trade-box, .redeem-box, .collection-section, .leaderboard-box, .quest-box, .battle-box {
       background: rgba(255, 255, 255, 0.08); padding: 25px; border-radius: 18px;
       backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15);
       margin-top: 25px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -55,7 +56,7 @@
     }
     .card-front { background: #1a252f; border: 4px solid #fff; justify-content: center; }
     .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; }
-    .card-back img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; }
+    .card-back img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; z-index: 5; }
     .rarity-badge.ul { background: linear-gradient(135deg, #f1c40f, #e67e22, #e74c3c); color: #fff; animation: glow 1.5s infinite alternate; }
     @keyframes glow {
@@ -71,14 +72,15 @@
     button:disabled { background: #7f8c8d; cursor: not-allowed; transform: none; }
     .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
     .btn-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .btn-blue { background: linear-gradient(135deg, #3498db, #2980b9); }
     .btn-sm { padding: 6px 14px; font-size: 0.85rem; border-radius: 15px; }
     .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; font-size: 0.95rem; display: inline-block; margin-top: 10px; }
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; margin-top: 15px; }
     .collection-item { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 8px; opacity: 0.35; filter: grayscale(100%); transition: all 0.3s; cursor: pointer; }
     .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
     .collection-item img { width: 100%; height: 65px; object-fit: cover; border-radius: 6px; }
-    .trade-grid { display: flex; justify-content: space-around; gap: 15px; margin-top: 15px; }
-    .trade-col { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; width: 50%; }
+    .trade-grid, .pvp-grid { display: flex; justify-content: space-around; gap: 15px; margin-top: 15px; }
+    .trade-col, .pvp-col { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; width: 50%; }
     .leaderboard-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
     .leaderboard-tab { background: rgba(255,255,255,0.15); border: none; padding: 6px 15px; border-radius: 20px; color: #fff; cursor: pointer; }
     .leaderboard-tab.active { background: #f1c40f; color: #333; font-weight: bold; }
@@ -100,8 +102,9 @@
       <div class="code-badge">โค้ด: snk</div>
     </div>
 
-    <h1>🎴 เกมสุ่มการ์ดออนไลน์</h1>
+    <h1>🎴 เกมสุ่มการ์ด & ลานประลอง Battle</h1>
 
+    <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
       <div>
@@ -113,6 +116,7 @@
       </div>
     </div>
 
+    <!-- MAIN GAME CONTENT -->
     <div id="gameContent" style="display: none;">
       <div class="player-bar">
         <div>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></div>
@@ -126,20 +130,58 @@
         </div>
       </div>
 
+      <!-- CARD ARENA -->
       <div class="card" id="card">
         <div class="card-inner" id="cardInner">
           <div class="card-front"><span style="font-size: 4rem;">❓</span><p>พร้อมสุ่ม</p></div>
           <div class="card-back" id="cardBack">
             <span class="rarity-badge" id="cardRarity">N</span>
             <img id="cardImage" src="" alt="Card">
-            <h3 id="cardTitle" style="margin: 10px 0 5px 0;">ชื่อการ์ด</h3>
-            <p id="cardDesc" style="font-size: 0.85rem; color: #555;">รายละเอียดการ์ด</p>
+            <h3 id="cardTitle" style="margin: 10px 0 2px 0;">ชื่อการ์ด</h3>
+            <p id="cardStatsText" style="font-size: 0.8rem; font-weight: bold; color: #e74c3c; margin: 0;">ATK: 0 | HP: 0</p>
+            <p id="cardDesc" style="font-size: 0.75rem; color: #555; margin: 4px 0 0 0;">รายละเอียด</p>
           </div>
         </div>
       </div>
 
       <button id="drawBtn">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
 
+      <!-- PvE BATTLE SYSTEM -->
+      <div class="battle-box" style="border: 2px dashed #e74c3c;">
+        <h3>⚔️ ลานประลอง PvE (สู้กับบอสรับสปิน)</h3>
+        <p style="font-size: 0.9rem; color: #ddd;">ส่งการ์ดของคุณไปพิชิตบอสรับรางวัลเพิ่ม!</p>
+        <select id="pveCardSelect"></select><br>
+        <button class="btn-green" id="startPveBtn">⚔️ เริ่มสู้กับบอส</button>
+        <div id="pveResult" style="margin-top: 10px; font-weight: bold; font-size: 0.95rem;"></div>
+      </div>
+
+      <!-- PvP BATTLE SYSTEM -->
+      <div class="battle-box" style="border: 2px dashed #3498db;">
+        <h3>🛡️ ลานประลอง PvP (ท้าดวลกับผู้เล่นอื่น)</h3>
+        <div id="pvpInit">
+          <input type="text" id="targetPvpInput" placeholder="พิมพ์ชื่อเพื่อนที่จะท้าดวล @ ..."><br>
+          <button class="btn-blue" id="startPvpBtn">⚔️ สร้างห้องท้าดวล PvP</button>
+        </div>
+        <div id="pvpRoom" style="display: none;">
+          <p>กำลังสู้กับ: <strong id="pvpPartnerName">-</strong></p>
+          <div class="pvp-grid">
+            <div class="pvp-col">
+              <h4>การ์ดของคุณ</h4>
+              <select id="myPvpCardSelect"></select>
+            </div>
+            <div class="pvp-col">
+              <h4>การ์ดของคู่ต่อสู้</h4>
+              <p id="pvpPartnerCardInfo">ยังไม่เลือกการ์ด</p>
+              <p id="pvpPartnerStatus">สถานะ: รอเลือก</p>
+            </div>
+          </div>
+          <button id="confirmPvpBtn" class="btn-green">✅ ลุยเลย (ตัดสินผล)</button>
+          <button id="cancelPvpBtn">❌ ยกเลิก</button>
+          <div id="pvpResult" style="margin-top: 10px; font-weight: bold;"></div>
+        </div>
+      </div>
+
+      <!-- QUEST SYSTEM -->
       <div class="quest-box">
         <h3>📜 ภารกิจประจำวัน (Daily Quests)</h3>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -152,12 +194,14 @@
         </div>
       </div>
 
+      <!-- REDEEM SYSTEM -->
       <div class="redeem-box">
         <h3>🎁 กรอกโค้ดรับรางวัล (Redeem Code)</h3>
         <input type="text" id="redeemCodeInput" placeholder="กรอกโค้ดที่นี่..."><br>
         <button class="btn-purple" id="redeemBtn">รับรางวัล</button>
       </div>
 
+      <!-- LEADERBOARD SYSTEM -->
       <div class="leaderboard-box">
         <h3>🏆 อันดับผู้เล่นสูงสุด (Leaderboard)</h3>
         <div class="leaderboard-tabs">
@@ -167,6 +211,7 @@
         <ul class="leaderboard-list" id="leaderboardList"></ul>
       </div>
 
+      <!-- TRADE SYSTEM -->
       <div class="trade-box">
         <h3>🔄 ระบบแลกเปลี่ยนการ์ด (Trade System)</h3>
         <div id="tradeInit">
@@ -192,6 +237,7 @@
         </div>
       </div>
 
+      <!-- COLLECTION SECTION -->
       <div class="collection-section">
         <h3>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h3>
         <div class="collection-grid" id="collectionGrid"></div>
@@ -199,13 +245,15 @@
     </div>
   </div>
 
+  <!-- MODAL -->
   <div class="modal-overlay" id="cardModal">
     <div class="modal-content" id="modalBox">
       <span class="close-btn" id="closeModalBtn">&times;</span>
       <span class="rarity-badge" id="modalRarity">UR</span>
       <img id="modalImage" src="" alt="Card">
-      <h3 id="modalTitle" style="margin: 15px 0 5px 0;">ชื่อการ์ด</h3>
-      <p id="modalDesc" style="color: #666; font-size: 0.9rem;">รายละเอียด</p>
+      <h3 id="modalTitle" style="margin: 15px 0 2px 0;">ชื่อการ์ด</h3>
+      <p id="modalStatsText" style="font-weight: bold; color: #e74c3c; margin: 0;">ATK: 0 | HP: 0</p>
+      <p id="modalDesc" style="color: #666; font-size: 0.9rem; margin-top: 5px;">รายละเอียด</p>
     </div>
   </div>
 
@@ -226,15 +274,16 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
+    // กำหนดพลังตามสเกลที่คุณต้องการ (ปีศาจขุมนรก < SNK < Reiko)
     const cards = [
-      { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'images/ryoma.png' },
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg' },
-      { id: 3, title: 'Reiko Kashima', rarity: 'UL', desc: 'ภูตผีสาวระดับตำนานเมืองสุดหายาก', image: 'images/dandadan1.png' }
+      { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', atk: 80, hp: 200, desc: 'ซามูไรพเนจรระดับกลาง', image: 'images/ryoma.png' },
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', atk: 35, hp: 90, desc: 'สิ่งมีชีวิตจากความมืดมิด (อ่อนที่สุด)', image: 'images/demon.jpeg' },
+      { id: 3, title: 'Reiko Kashima', rarity: 'UL', atk: 180, hp: 450, desc: 'ภูตผีสาวแกร่งที่สุดในเกม', image: 'images/dandadan1.png' }
     ];
 
     const gachaPool = [
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg', rate: 99.99 },
-      { id: 3, title: 'Reiko Kashima', rarity: 'UL', desc: 'ภูตผีสาวระดับตำนานเมืองสุดหายาก', image: 'images/dandadan1.png', rate: 0.01 }
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', atk: 35, hp: 90, desc: 'สิ่งมีชีวิตจากความมืดมิด (อ่อนที่สุด)', image: 'images/demon.jpeg', rate: 99.99 },
+      { id: 3, title: 'Reiko Kashima', rarity: 'UL', atk: 180, hp: 450, desc: 'ภูตผีสาวแกร่งที่สุดในเกม', image: 'images/dandadan1.png', rate: 0.01 }
     ];
 
     const promoCodes = { 'snk': { cardId: 1, rewardName: 'Ryoma (SNK)' } };
@@ -244,6 +293,7 @@
     let username = '';
     let playerData = { unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
     let currentTradeId = null;
+    let currentPvpId = null;
     let currentLeaderboardTab = 'cards';
     let allUsersCache = {};
 
@@ -263,10 +313,7 @@
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
 
-      if (!email || !password) {
-        alert('❌ กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
-        return;
-      }
+      if (!email || !password) return alert('❌ กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
 
       authBtn.disabled = true;
       const originalText = authBtn.innerText;
@@ -304,6 +351,7 @@
 
           showGameContent();
           listenForTradeRequests();
+          listenForPvpRequests();
           listenForLeaderboard();
         } catch(err) {
           console.error("Database error:", err);
@@ -336,6 +384,7 @@
       updateQuestUI();
       initCollection();
       updateTradeCardSelect();
+      updateBattleSelects();
     }
 
     function updatePityDisplay() {
@@ -376,6 +425,7 @@
 
       document.getElementById('cardImage').src = cardObj.image;
       document.getElementById('cardTitle').innerText = cardObj.title;
+      document.getElementById('cardStatsText').innerText = `ATK: ${cardObj.atk} | HP: ${cardObj.hp}`;
       document.getElementById('cardDesc').innerText = cardObj.desc;
 
       if (!playerData.unlockedCards.includes(cardObj.id)) playerData.unlockedCards.push(cardObj.id);
@@ -384,8 +434,8 @@
       updateQuestUI();
       initCollection();
       updateTradeCardSelect();
+      updateBattleSelects();
 
-      // สลับการ์ดให้หมุนโชว์ผลลัพธ์
       const cardInner = document.getElementById('cardInner');
       cardInner.classList.add('flipped');
     });
@@ -429,6 +479,7 @@
       document.getElementById('redeemCodeInput').value = '';
       initCollection();
       updateTradeCardSelect();
+      updateBattleSelects();
     });
 
     function initCollection() {
@@ -461,23 +512,193 @@
 
       document.getElementById('modalImage').src = c.image;
       document.getElementById('modalTitle').innerText = c.title;
+      document.getElementById('modalStatsText').innerText = `ATK: ${c.atk} | HP: ${c.hp}`;
       document.getElementById('modalDesc').innerText = c.desc;
       document.getElementById('cardModal').classList.add('active');
     }
 
-    // ปิด Modal เมื่อกดปุ่ม X
     document.getElementById('closeModalBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('cardModal').classList.remove('active');
     });
 
-    // ปิด Modal เมื่อคลิกพื้นที่สีดำรอบนอก
     document.getElementById('cardModal').addEventListener('click', (e) => {
       if (e.target.id === 'cardModal') {
         document.getElementById('cardModal').classList.remove('active');
       }
     });
 
+    // --- PVE BATTLE ---
+    function updateBattleSelects() {
+      const pveSelect = document.getElementById('pveCardSelect');
+      const pvpSelect = document.getElementById('myPvpCardSelect');
+      pveSelect.innerHTML = '<option value="">-- เลือกการ์ดลงสู้บอส --</option>';
+      pvpSelect.innerHTML = '<option value="">-- เลือกการ์ดท้าดวล PvP --</option>';
+
+      (playerData.unlockedCards || []).forEach(id => {
+        const c = cards.find(item => item.id === id);
+        if (c) {
+          pveSelect.innerHTML += `<option value="${c.id}">${c.title} (ATK: ${c.atk} / HP: ${c.hp})</option>`;
+          pvpSelect.innerHTML += `<option value="${c.id}">${c.title} (ATK: ${c.atk} / HP: ${c.hp})</option>`;
+        }
+      });
+    }
+
+    document.getElementById('startPveBtn').addEventListener('click', async () => {
+      const cardId = document.getElementById('pveCardSelect').value;
+      if (!cardId) return alert('❌ กรุณาเลือกการ์ดก่อนเข้าประลอง!');
+
+      const myCard = cards.find(item => item.id == cardId);
+      const boss = { title: 'มังกรทมิฬ', atk: 75, hp: 250 }; // บอสกลางๆ
+      const resultEl = document.getElementById('pveResult');
+
+      // คำนวณผลต่อสู้จากพลัง ATK และ HP
+      let playerPower = (myCard.atk * 1.5) + (myCard.hp * 0.5);
+      let bossPower = (boss.atk * 1.5) + (boss.hp * 0.5);
+
+      if (playerPower >= bossPower) {
+        resultEl.style.color = '#2ecc71';
+        resultEl.innerHTML = `🎉 ชนะบอสสำเร็จ! ใช้ ${myCard.title} เอาชนะมังกรทมิฬได้! รับ +3 สปิน`;
+        playerData.spins += 3;
+      } else {
+        resultEl.style.color = '#e74c3c';
+        resultEl.innerHTML = `💀 แพ้บอส! การ์ด ${myCard.title} พลังยังไม่พอ (ปีศาจขุมนรกสู้ไม่ไหว ลองหา Reiko หรือ Ryoma มาสู้ใหม่)`;
+      }
+
+      await saveDataOnline();
+      document.getElementById('spinsDisplay').innerText = playerData.spins;
+    });
+
+    // --- PVP BATTLE (REALTIME) ---
+    document.getElementById('startPvpBtn').addEventListener('click', async () => {
+      const target = document.getElementById('targetPvpInput').value.trim();
+      if (!target || target === username) return alert('❌ กรุณากรอกชื่อเพื่อนให้ถูกต้อง');
+
+      const snapshot = await db.ref(`usernames/${target}`).once('value');
+      if (!snapshot.exists()) return alert('❌ ไม่พบผู้เล่นนี้ในระบบ');
+
+      currentPvpId = [username, target].sort().join('_pvp_');
+      await db.ref(`pvp/${currentPvpId}`).set({
+        p1: username, p2: target, p1_uid: currentUser.uid, p2_uid: snapshot.val().uid,
+        p1_card: null, p2_card: null, p1_confirm: false, p2_confirm: false, status: 'active'
+      });
+      openPvpUI(target);
+    });
+
+    function listenForPvpRequests() {
+      db.ref('pvp').on('value', (snapshot) => {
+        if (!snapshot.exists() || currentPvpId) return;
+        const pvpRooms = snapshot.val();
+        for (let id in pvpRooms) {
+          const room = pvpRooms[id];
+          if ((room.p1 === username || room.p2 === username) && room.status === 'active') {
+            const partner = room.p1 === username ? room.p2 : room.p1;
+            if (confirm(`🛡️ ผู้เล่น ${partner} ท้าดวล PvP กับคุณ ยืนยันเข้าร่วมหรือไม่?`)) {
+              currentPvpId = id;
+              openPvpUI(partner);
+            }
+            break;
+          }
+        }
+      });
+    }
+
+    function openPvpUI(partner) {
+      document.getElementById('pvpInit').style.display = 'none';
+      document.getElementById('pvpRoom').style.display = 'block';
+      document.getElementById('pvpPartnerName').innerText = partner;
+
+      db.ref(`pvp/${currentPvpId}`).on('value', async (snap) => {
+        if (!snap.exists()) { resetPvpUI(); return; }
+        const data = snap.val();
+        const isP1 = username === data.p1;
+        const partnerCard = isP1 ? data.p2_card : data.p1_card;
+        const partnerConfirm = isP1 ? data.p2_confirm : data.p1_confirm;
+
+        if (partnerCard) {
+          const c = cards.find(item => item.id == partnerCard);
+          document.getElementById('pvpPartnerCardInfo').innerText = `${c.title} (ATK: ${c.atk})`;
+        } else {
+          document.getElementById('pvpPartnerCardInfo').innerText = 'ยังไม่เลือกการ์ด';
+        }
+        document.getElementById('pvpPartnerStatus').innerText = partnerConfirm ? '✅ พร้อมสู้แล้ว' : '⏳ กำลังเลือกการ์ด';
+
+        if (data.p1_confirm && data.p2_confirm && data.status === 'active') {
+          await resolvePvpBattle(data);
+        }
+      });
+    }
+
+    document.getElementById('myPvpCardSelect').addEventListener('change', async (e) => {
+      if (!currentPvpId) return;
+      const val = e.target.value;
+      const snap = await db.ref(`pvp/${currentPvpId}`).once('value');
+      if (!snap.exists()) return;
+      const data = snap.val();
+      if (username === data.p1) { data.p1_card = val ? parseInt(val) : null; data.p1_confirm = false; }
+      else { data.p2_card = val ? parseInt(val) : null; data.p2_confirm = false; }
+      await db.ref(`pvp/${currentPvpId}`).set(data);
+    });
+
+    document.getElementById('confirmPvpBtn').addEventListener('click', async () => {
+      const cardId = document.getElementById('myPvpCardSelect').value;
+      if (!cardId) return alert('❌ กรุณาเลือกการ์ดก่อนกดยืนยันสู้');
+      const snap = await db.ref(`pvp/${currentPvpId}`).once('value');
+      if (!snap.exists()) return;
+      const data = snap.val();
+      if (username === data.p1) data.p1_confirm = true;
+      else data.p2_confirm = true;
+      await db.ref(`pvp/${currentPvpId}`).set(data);
+    });
+
+    document.getElementById('cancelPvpBtn').addEventListener('click', async () => {
+      if (currentPvpId) await db.ref(`pvp/${currentPvpId}`).remove();
+      resetPvpUI();
+    });
+
+    async function resolvePvpBattle(roomData) {
+      roomData.status = 'completed';
+      await db.ref(`pvp/${currentPvpId}`).set(roomData);
+
+      const isP1 = username === roomData.p1;
+      const myCardId = isP1 ? roomData.p1_card : roomData.p2_card;
+      const enemyCardId = isP1 ? roomData.p2_card : roomData.p1_card;
+
+      const myCard = cards.find(c => c.id == myCardId);
+      const enemyCard = cards.find(c => c.id == enemyCardId);
+
+      const myScore = myCard.atk + myCard.hp;
+      const enemyScore = enemyCard.atk + enemyCard.hp;
+
+      const resultBox = document.getElementById('pvpResult');
+      if (myScore > enemyScore) {
+        resultBox.style.color = '#2ecc71';
+        resultBox.innerHTML = `🏆 ชนะการดวล! ${myCard.title} เฉือนชนะ ${enemyCard.title} ของคู่ต่อสู้! (+2 สปิน)`;
+        playerData.spins += 2;
+        await saveDataOnline();
+        document.getElementById('spinsDisplay').innerText = playerData.spins;
+      } else if (myScore < enemyScore) {
+        resultBox.style.color = '#e74c3c';
+        resultBox.innerHTML = `💀 แพ้การดวล! ${myCard.title} สู้ความแกร่งของ ${enemyCard.title} ไม่ไหว`;
+      } else {
+        resultBox.style.color = '#f1c40f';
+        resultBox.innerHTML = `🤝 เสมอกัน! พลังสูสีคู่คี่`;
+      }
+
+      setTimeout(async () => {
+        await db.ref(`pvp/${currentPvpId}`).remove();
+        resetPvpUI();
+      }, 5000);
+    }
+
+    function resetPvpUI() {
+      currentPvpId = null;
+      document.getElementById('pvpInit').style.display = 'block';
+      document.getElementById('pvpRoom').style.display = 'none';
+      document.getElementById('pvpResult').innerHTML = '';
+    }
+
+    // Leaderboard & Trade setup
     document.getElementById('tabCards').addEventListener('click', () => switchLeaderboard('cards'));
     document.getElementById('tabSpins').addEventListener('click', () => switchLeaderboard('spins'));
 
@@ -627,6 +848,7 @@
       await db.ref(`trades/${currentTradeId}`).remove();
       resetTradeUI();
       initCollection();
+      updateBattleSelects();
     }
 
     function resetTradeUI() {
