@@ -47,7 +47,7 @@
       100% { transform: scale(1.02); box-shadow: 0 0 25px rgba(255, 234, 167, 0.9); }
     }
 
-    .auth-box, .trade-box, .redeem-box, .collection-section {
+    .auth-box, .trade-box, .redeem-box, .collection-section, .leaderboard-box {
       background: rgba(255, 255, 255, 0.1);
       padding: 25px;
       border-radius: 15px;
@@ -99,6 +99,16 @@
     
     .trade-grid { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
     .trade-col { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 45%; }
+
+    /* Leaderboard Style */
+    .leaderboard-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+    .leaderboard-tab { background: rgba(255, 255, 255, 0.2); border: none; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; }
+    .leaderboard-tab.active { background: #f1c40f; color: #333; font-weight: bold; }
+    .leaderboard-list { list-style: none; padding: 0; margin: 0; text-align: left; }
+    .leaderboard-item { display: flex; justify-content: space-between; padding: 10px 15px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; margin-bottom: 8px; }
+    .leaderboard-item:nth-child(1) { border-left: 5px solid #ffd700; background: rgba(255, 215, 0, 0.2); }
+    .leaderboard-item:nth-child(2) { border-left: 5px solid #c0c0c0; background: rgba(192, 192, 192, 0.2); }
+    .leaderboard-item:nth-child(3) { border-left: 5px solid #cd7f32; background: rgba(205, 127, 50, 0.2); }
 
     /* Modal หน้าต่างดูการ์ดแบบเต็ม */
     .modal-overlay {
@@ -174,6 +184,18 @@
         <h2>🎁 กรอกโค้ดรับรางวัล (Redeem Code)</h2>
         <input type="text" id="redeemCodeInput" placeholder="กรอกโค้ดที่นี่..."><br>
         <button class="btn-purple" onclick="redeemCode()">รับรางวัล</button>
+      </div>
+
+      <!-- Section: Leaderboard -->
+      <div class="leaderboard-box">
+        <h2>🏆 อันดับผู้เล่นสูงสุด (Leaderboard)</h2>
+        <div class="leaderboard-tabs">
+          <button class="leaderboard-tab active" id="tabCards" onclick="switchLeaderboard('cards')">🎴 การ์ดเยอะที่สุด</button>
+          <button class="leaderboard-tab" id="tabSpins" onclick="switchLeaderboard('spins')">⚡ สปินเยอะที่สุด</button>
+        </div>
+        <ul class="leaderboard-list" id="leaderboardList">
+          <li style="text-align: center; color: #ccc;">กำลังโหลดข้อมูล...</li>
+        </ul>
       </div>
 
       <!-- Section: Trade System -->
@@ -262,6 +284,7 @@
     let playerData = { unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
     let isFlipped = false;
     let currentTradeId = null;
+    let currentLeaderboardTab = 'cards';
 
     window.toggleAuthMode = function() {
       isRegisterMode = !isRegisterMode;
@@ -298,7 +321,6 @@
 
         if (snapshot.exists()) {
           playerData = snapshot.val();
-          // กำหนดค่าเริ่มต้นถ้าบัญชีเดิมยังไม่มีสปิน
           if (playerData.spins === undefined) {
             playerData.spins = 10;
           }
@@ -311,6 +333,7 @@
 
         showGameContent();
         listenForTradeRequests();
+        listenForLeaderboard();
       } else {
         currentUser = null;
         if (currentTradeId) cancelTrade();
@@ -383,234 +406,67 @@
       document.getElementById('collectedCount').innerText = unlockedList.length;
     }
 
-    // --- ระบบ Modal แสดงการ์ดเต็ม ---
-    window.openCardModal = function(card) {
-      document.getElementById('modalRarity').innerText = card.rarity;
-      document.getElementById('modalImage').src = card.image;
-      document.getElementById('modalTitle').innerText = card.title;
-      document.getElementById('modalDesc').innerText = card.desc;
-      document.getElementById('cardModal').classList.add('active');
+    /* --- ระบบ Leaderboard (ลีดเดอร์บอร์ด) --- */
+    window.switchLeaderboard = function(type) {
+      currentLeaderboardTab = type;
+      document.getElementById('tabCards').classList.toggle('active', type === 'cards');
+      document.getElementById('tabSpins').classList.toggle('active', type === 'spins');
+      renderLeaderboard();
     };
 
-    window.closeCardModal = function(event) {
-      if (event.target.classList.contains('modal-overlay') || event.target.classList.contains('close-btn')) {
-        document.getElementById('cardModal').classList.remove('active');
+    let allUsersCache = {};
+    function listenForLeaderboard() {
+      const usersRef = ref(db, 'users');
+      onValue(usersRef, (snapshot) => {
+        if (snapshot.exists()) {
+          allUsersCache = snapshot.val();
+          renderLeaderboard();
+        }
+      });
+    }
+
+    function renderLeaderboard() {
+      const listEl = document.getElementById('leaderboardList');
+      listEl.innerHTML = '';
+
+      let userArray = [];
+      for (let uid in allUsersCache) {
+        const u = allUsersCache[uid];
+        const cardCount = u.unlockedCards ? u.unlockedCards.length : 0;
+        const spinCount = u.spins !== undefined ? u.spins : 10;
+        userArray.push({
+          username: u.username || 'Unknown',
+          cardCount: cardCount,
+          spinCount: spinCount
+        });
       }
-    };
 
-    function updateTradeCardSelect() {
-      const select = document.getElementById('myTradeCardSelect');
-      select.innerHTML = '<option value="">-- เลือกการ์ดที่จะเสนอ --</option>';
-      const unlockedList = playerData.unlockedCards || [];
-      
-      cards.forEach(card => {
-        if (unlockedList.includes(card.id)) {
-          select.innerHTML += `<option value="${card.id}">${card.title} (${card.rarity})</option>`;
-        }
-      });
-    }
-
-    window.startTrade = async function() {
-      const targetPlayer = document.getElementById('targetPlayerInput').value.trim();
-      if (!targetPlayer) return alert('กรุณากรอกชื่อผู้เล่นเพื่อนก่อนครับ');
-      if (targetPlayer === username) return alert('ไม่สามารถเทรดกับตัวเองได้');
-
-      const snapshot = await get(child(ref(db), `usernames/${targetPlayer}`));
-      if (!snapshot.exists()) return alert('ไม่พบชื่อผู้เล่นนี้ในระบบ (ใช้ชื่อส่วนก่อนหน้าเครื่องหมาย @)');
-
-      currentTradeId = [username, targetPlayer].sort().join('_trade_');
-      
-      const tradeData = {
-        p1: username,
-        p2: targetPlayer,
-        p1_uid: currentUser.uid,
-        p2_uid: snapshot.val().uid,
-        p1_card: null,
-        p2_card: null,
-        p1_confirm: false,
-        p2_confirm: false,
-        status: 'active'
-      };
-
-      await set(ref(db, `trades/${currentTradeId}`), tradeData);
-      openTradeUI(targetPlayer);
-    };
-
-    function listenForTradeRequests() {
-      const tradesRef = ref(db, 'trades');
-      onValue(tradesRef, (snapshot) => {
-        if (!snapshot.exists() || currentTradeId) return;
-        const allTrades = snapshot.val();
-        for (let id in allTrades) {
-          const trade = allTrades[id];
-          if ((trade.p1 === username || trade.p2 === username) && trade.status === 'active') {
-            const partner = trade.p1 === username ? trade.p2 : trade.p1;
-            if (confirm(`ผู้เล่น ${partner} ชวนคุณเทรดการ์ด ต้องการเข้าร่วมหรือไม่?`)) {
-              currentTradeId = id;
-              openTradeUI(partner);
-            }
-            break;
-          }
-        }
-      });
-    }
-
-    function openTradeUI(partnerName) {
-      document.getElementById('tradeInit').style.display = 'none';
-      document.getElementById('tradeRoom').style.display = 'block';
-      document.getElementById('partnerName').innerText = partnerName;
-      updateTradeCardSelect();
-
-      const tradeRef = ref(db, `trades/${currentTradeId}`);
-      onValue(tradeRef, async (snapshot) => {
-        if (!snapshot.exists()) {
-          alert('การเทรดถูกยกเลิกแล้ว');
-          resetTradeUI();
-          return;
-        }
-
-        const data = snapshot.val();
-        const isP1 = username === data.p1;
-        const partnerCard = isP1 ? data.p2_card : data.p1_card;
-        const partnerConfirm = isP1 ? data.p2_confirm : data.p1_confirm;
-
-        if (partnerCard) {
-          const cObj = cards.find(c => c.id == partnerCard);
-          document.getElementById('partnerOfferCard').innerText = `${cObj.title} (${cObj.rarity})`;
-        } else {
-          document.getElementById('partnerOfferCard').innerText = 'ยังไม่เลือกการ์ด';
-        }
-        document.getElementById('partnerOfferStatus').innerText = partnerConfirm ? '✅ ยืนยันแล้ว' : '⏳ กำลังเลือก/รอการยืนยัน';
-
-        if (data.p1_confirm && data.p2_confirm && data.status === 'active') {
-          await executeTradeSwap(data);
-        }
-      });
-    }
-
-    window.updateMyOffer = async function() {
-      if (!currentTradeId) return;
-      const cardId = document.getElementById('myTradeCardSelect').value;
-      const snapshot = await get(child(ref(db), `trades/${currentTradeId}`));
-      if (!snapshot.exists()) return;
-
-      const data = snapshot.val();
-      const isP1 = username === data.p1;
-
-      if (isP1) {
-        data.p1_card = cardId ? parseInt(cardId) : null;
-        data.p1_confirm = false;
+      if (currentLeaderboardTab === 'cards') {
+        userArray.sort((a, b) => b.cardCount - a.cardCount);
       } else {
-        data.p2_card = cardId ? parseInt(cardId) : null;
-        data.p2_confirm = false;
+        userArray.sort((a, b) => b.spinCount - a.spinCount);
       }
 
-      await set(ref(db, `trades/${currentTradeId}`), data);
-    };
+      const topUsers = userArray.slice(0, 10);
 
-    window.confirmTrade = async function() {
-      const cardId = document.getElementById('myTradeCardSelect').value;
-      if (!cardId) return alert('กรุณาเลือกการ์ดที่จะนำมาแลกเปลี่ยนก่อนครับ');
-
-      const snapshot = await get(child(ref(db), `trades/${currentTradeId}`));
-      if (!snapshot.exists()) return;
-
-      const data = snapshot.val();
-      if (username === data.p1) data.p1_confirm = true;
-      else data.p2_confirm = true;
-
-      await set(ref(db, `trades/${currentTradeId}`), data);
-      document.getElementById('confirmTradeBtn').disabled = true;
-    };
-
-    async function executeTradeSwap(tradeData) {
-      tradeData.status = 'completed';
-      await set(ref(db, `trades/${currentTradeId}`), tradeData);
-
-      const isP1 = username === tradeData.p1;
-      const giveCardId = isP1 ? tradeData.p1_card : tradeData.p2_card;
-      const getCardId = isP1 ? tradeData.p2_card : tradeData.p1_card;
-
-      playerData.unlockedCards = playerData.unlockedCards.filter(id => id !== giveCardId);
-      if (!playerData.unlockedCards.includes(getCardId)) {
-        playerData.unlockedCards.push(getCardId);
+      if (topUsers.length === 0) {
+        listEl.innerHTML = '<li style="text-align: center;">ยังไม่มีข้อมูลอันดับ</li>';
+        return;
       }
 
-      await saveDataOnline();
-      alert('🎉 แลกเปลี่ยนการ์ดเรียบร้อยแล้ว!');
+      topUsers.forEach((user, index) => {
+        const rank = index + 1;
+        let badge = `#${rank}`;
+        if (rank === 1) badge = '🥇';
+        else if (rank === 2) badge = '🥈';
+        else if (rank === 3) badge = '🥉';
 
-      await remove(ref(db, `trades/${currentTradeId}`));
-      resetTradeUI();
-      initCollection();
-    }
+        const li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        
+        const valueText = currentLeaderboardTab === 'cards' 
+          ? `🎴 ${user.cardCount} ใบ` 
+          : `⚡ ${user.spinCount} สปิน`;
 
-    window.cancelTrade = async function() {
-      if (currentTradeId) {
-        await remove(ref(db, `trades/${currentTradeId}`));
-      }
-      resetTradeUI();
-    };
-
-    function resetTradeUI() {
-      currentTradeId = null;
-      document.getElementById('tradeInit').style.display = 'block';
-      document.getElementById('tradeRoom').style.display = 'none';
-      document.getElementById('confirmTradeBtn').disabled = false;
-      document.getElementById('myTradeCardSelect').value = '';
-    }
-
-    // --- ระบบการสุ่มการ์ดหลัก (ตรวจสอบและตัดสปิน) ---
-    window.drawCard = function() {
-      // เช็กสปินก่อนสุ่ม
-      if (playerData.spins === undefined) playerData.spins = 10;
-      if (playerData.spins <= 0) {
-        return alert('❌ สปินของคุณหมดแล้ว!');
-      }
-
-      const cardInner = document.getElementById('cardInner');
-      const btn = document.getElementById('drawBtn');
-      btn.disabled = true;
-
-      if (isFlipped) {
-        cardInner.classList.remove('flipped');
-        isFlipped = false;
-        setTimeout(randomizeAndFlip, 600);
-      } else {
-        randomizeAndFlip();
-      }
-    };
-
-    async function randomizeAndFlip() {
-      const randomIndex = Math.floor(Math.random() * gachaPool.length);
-      const selectedCard = gachaPool[randomIndex];
-
-      // หักสปิน และ เพิ่มสถิติการสุ่ม
-      playerData.spins -= 1;
-      playerData.drawCount = (playerData.drawCount || 0) + 1;
-
-      document.getElementById('spinsDisplay').innerText = playerData.spins;
-      document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
-
-      document.getElementById('cardRarity').innerText = selectedCard.rarity;
-      document.getElementById('cardImage').src = selectedCard.image;
-      document.getElementById('cardTitle').innerText = selectedCard.title;
-      document.getElementById('cardDesc').innerText = selectedCard.desc;
-
-      if (!playerData.unlockedCards) playerData.unlockedCards = [];
-      if (!playerData.unlockedCards.includes(selectedCard.id)) {
-        playerData.unlockedCards.push(selectedCard.id);
-      }
-
-      await saveDataOnline();
-      initCollection();
-      updateTradeCardSelect();
-
-      document.getElementById('cardInner').classList.add('flipped');
-      isFlipped = true;
-      setTimeout(() => { document.getElementById('drawBtn').disabled = false; }, 600);
-    }
-
-    document.getElementById('card').addEventListener('click', window.drawCard);
-  </script>
-</body>
-</html>
+        li.innerHTML = `
+          <span><st
