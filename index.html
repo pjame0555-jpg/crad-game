@@ -295,14 +295,19 @@
           await signInWithEmailAndPassword(auth, email, password);
         }
       } catch (error) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-          alert('❌ ไม่พบบัญชีนี้ หรือรหัสผ่านไม่ถูกต้อง (หากยังไม่เคยสมัคร ให้กดสมัครสมาชิกก่อนครับ)');
+        console.error("Auth Error Code:", error.code, error.message);
+        if (error.code === 'auth/operation-not-allowed') {
+          alert('❌ ยังไม่ได้เปิดใช้งาน Email/Password ใน Firebase Console!\n(กรุณาไปที่ Firebase Console -> Authentication -> Sign-in method แล้วเปิดใช้งาน Email/Password)');
+        } else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+          alert('❌ ไม่พบบัญชีนี้ หรือรหัสผ่านไม่ถูกต้อง (หากยังไม่เคยสมัคร ให้กด "สมัครสมาชิก" ด้านล่างก่อน)');
         } else if (error.code === 'auth/email-already-in-use') {
           alert('❌ อีเมลนี้ถูกใช้งานแล้ว กรุณากดเข้าสู่ระบบแทน');
         } else if (error.code === 'auth/weak-password') {
           alert('❌ รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+        } else if (error.code === 'auth/invalid-email') {
+          alert('❌ รูปแบบอีเมลไม่ถูกต้อง');
         } else {
-          alert('เกิดข้อผิดพลาด: ' + error.message);
+          alert(`เกิดข้อผิดพลาด (${error.code}): ${error.message}`);
         }
       }
     };
@@ -445,21 +450,4 @@
         const spinCount = u.spins !== undefined ? u.spins : 10;
         
         let displayName = u.username;
-        if (!displayName || displayName === 'Unknown') {
-          if (u.email) {
-            displayName = u.email.split('@')[0];
-          } else {
-            displayName = 'Player_' + uid.substring(0, 5);
-          }
-        }
-
-        userArray.push({
-          username: displayName,
-          cardCount: cardCount,
-          spinCount: spinCount
-        });
-      }
-
-      if (currentLeaderboardTab === 'cards') {
-        userArray.sort((a, b) => b.cardCount - a.cardCount);
-     
+        if (!displayName || displayName === 'Unkno
