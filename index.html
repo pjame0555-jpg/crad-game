@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Auth Persistence Fixed)</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Fixed Auth UI)</title>
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
@@ -245,7 +245,6 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // FIX 1: Set explicit Auth Persistence
     setPersistence(auth, browserLocalPersistence).catch(console.error);
 
     const cards = [
@@ -305,7 +304,7 @@
         console.error(error);
         switch (error.code) {
           case 'auth/unauthorized-domain':
-            alert('❌ โดเมนนี้ยังไม่ได้รับอนุญาต! ให้ไปเพิ่ม localhost หรือ IP ของคุณใน Firebase Console');
+            alert('❌ โดเมนนี้ยังไม่ได้รับอนุญาต! ให้ไปเพิ่ม pjame0555-jpg.github.io ใน Firebase Console');
             break;
           case 'auth/user-not-found':
           case 'auth/wrong-password':
@@ -327,12 +326,13 @@
       }
     });
 
-    // FIX 2: Correct Auth State Transition
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
         username = user.email ? user.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : 'user_' + user.uid.substring(0, 5);
         
+        showGameContent();
+
         try {
           const snapshot = await get(child(ref(db), `users/${user.uid}`));
           if (snapshot.exists()) {
@@ -341,7 +341,6 @@
             playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
             await saveDataOnline();
           }
-          
           await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
 
           showGameContent();
@@ -349,19 +348,18 @@
           listenForLeaderboard();
         } catch(err) {
           console.error("Database error:", err);
-          showGameContent(); // Force show UI even on offline/rules error
         }
       } else {
         currentUser = null;
-        document.getElementById('authBox').style.display = 'block';
-        document.getElementById('gameContent').style.display = 'none';
+        document.getElementById('authBox').style.setProperty('display', 'block', 'important');
+        document.getElementById('gameContent').style.setProperty('display', 'none', 'important');
       }
     });
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
       signOut(auth).then(() => {
-        document.getElementById('authBox').style.display = 'block';
-        document.getElementById('gameContent').style.display = 'none';
+        document.getElementById('authBox').style.setProperty('display', 'block', 'important');
+        document.getElementById('gameContent').style.setProperty('display', 'none', 'important');
       });
     });
 
@@ -370,8 +368,8 @@
     }
 
     function showGameContent() {
-      document.getElementById('authBox').style.display = 'none';
-      document.getElementById('gameContent').style.display = 'block';
+      document.getElementById('authBox').style.setProperty('display', 'none', 'important');
+      document.getElementById('gameContent').style.setProperty('display', 'block', 'important');
       document.getElementById('playerDisplay').innerText = username;
       document.getElementById('spinsDisplay').innerText = playerData.spins;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount || 0;
@@ -403,4 +401,4 @@
         let cumulative = 0;
         for (let c of gachaPool) {
           cumulative += c.rate;
-          if (rand <= cumulative) { cardObj = c; bre
+          if (rand <= cumulative) { cardObj 
