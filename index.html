@@ -116,7 +116,7 @@
         <button id="logoutBtn" class="btn-sm">ออกจากระบบ</button>
         
         <div style="width: 100%; text-align: left; margin-top: 5px; font-size: 0.85rem;">
-          การันตี SSR ในอีก: <span id="pityCount" style="color: #e74c3c; font-weight: bold;">10</span> ครั้ง
+          การันตี SSR ในอีก: <span id="pityCount" style="color: #e74c3c; font-weight: bold;">5</span> ครั้ง
           <div class="pity-container"><div class="pity-bar" id="pityBar"></div></div>
         </div>
       </div>
@@ -142,7 +142,7 @@
           <button class="btn-sm btn-green" id="q1Btn">รับ +3 สปิน</button>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>🎴 สะสมการ์ดครบ 3 ใบ (<span id="q2Prog">0</span>/3)</span>
+          <span>🎴 สะสมการ์ดครบ 2 ใบ (<span id="q2Prog">0</span>/2)</span>
           <button class="btn-sm btn-green" id="q2Btn">รับ +5 สปิน</button>
         </div>
       </div>
@@ -221,19 +221,14 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
+    // มีเฉพาะการ์ด 2 ใบตามที่ต้องการ (อ้างอิงไฟล์รูปภาพในโฟลเดอร์เดียวกัน)
     const cards = [
-      { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'https://via.placeholder.com/200x300/e74c3c/ffffff?text=Ryoma+UR' },
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'https://via.placeholder.com/200x300/9b59b6/ffffff?text=Demon+SSR' },
-      { id: 3, title: 'อัศวินเกราะเหล็ก', rarity: 'SR', desc: 'ผู้พิทักษ์อาณาจักร', image: 'https://via.placeholder.com/200x300/34495e/ffffff?text=Knight+SR' },
-      { id: 4, title: 'นักเวทฝึกหัด', rarity: 'R', desc: 'ผู้เริ่มต้นร่ายคาถา', image: 'https://via.placeholder.com/200x300/2980b9/ffffff?text=Mage+R' },
-      { id: 5, title: 'สไลม์สีฟ้า', rarity: 'N', desc: 'มอนสเตอร์ตัวน้อย', image: 'https://via.placeholder.com/200x300/2ecc71/ffffff?text=Slime+N' }
+      { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'ryoma.png' },
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'demon.jpg' }
     ];
 
     const gachaPool = [
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'https://via.placeholder.com/200x300/9b59b6/ffffff?text=Demon+SSR', rate: 10 },
-      { id: 3, title: 'อัศวินเกราะเหล็ก', rarity: 'SR', desc: 'ผู้พิทักษ์อาณาจักร', image: 'https://via.placeholder.com/200x300/34495e/ffffff?text=Knight+SR', rate: 25 },
-      { id: 4, title: 'นักเวทฝึกหัด', rarity: 'R', desc: 'ผู้เริ่มต้นร่ายคาถา', image: 'https://via.placeholder.com/200x300/2980b9/ffffff?text=Mage+R', rate: 35 },
-      { id: 5, title: 'สไลม์สีฟ้า', rarity: 'N', desc: 'มอนสเตอร์ตัวน้อย', image: 'https://via.placeholder.com/200x300/2ecc71/ffffff?text=Slime+N', rate: 30 }
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'demon.jpg', rate: 100 }
     ];
 
     const promoCodes = { 'snk': { cardId: 1, rewardName: 'Ryoma (SNK)' } };
@@ -251,7 +246,6 @@
     const toggleAuth = document.getElementById('toggleAuth');
     const drawBtn = document.getElementById('drawBtn');
 
-    // สลับโหมด สมัคร / เข้าสู่ระบบ
     toggleAuth.addEventListener('click', () => {
       isRegisterMode = !isRegisterMode;
       authTitle.innerText = isRegisterMode ? '📝 สมัครสมาชิก' : '🔑 เข้าสู่ระบบ';
@@ -259,7 +253,6 @@
       toggleAuth.innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
     });
 
-    // ปุ่มกดล็อกอิน / สมัคร
     authBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
@@ -340,9 +333,9 @@
     }
 
     function updatePityDisplay() {
-      const rem = 10 - (playerData.pity % 10);
+      const rem = 5 - (playerData.pity % 5);
       document.getElementById('pityCount').innerText = rem;
-      document.getElementById('pityBar').style.width = `${((playerData.pity % 10) / 10) * 100}%`;
+      document.getElementById('pityBar').style.width = `${((playerData.pity % 5) / 5) * 100}%`;
     }
 
     drawBtn.addEventListener('click', async () => {
@@ -352,19 +345,7 @@
       playerData.drawCount = (playerData.drawCount || 0) + 1;
       playerData.pity = (playerData.pity || 0) + 1;
 
-      let cardObj;
-      if (playerData.pity >= 10) {
-        cardObj = gachaPool.find(c => c.rarity === 'SSR') || gachaPool[0];
-        playerData.pity = 0;
-      } else {
-        const rand = Math.random() * 100;
-        let cumulative = 0;
-        for (let c of gachaPool) {
-          cumulative += c.rate;
-          if (rand <= cumulative) { cardObj = c; break; }
-        }
-        if (!cardObj) cardObj = gachaPool[gachaPool.length - 1];
-      }
+      let cardObj = gachaPool[0]; // ออกการ์ดปีศาจจากขุมนรก (demon.jpg)
 
       document.getElementById('spinsDisplay').innerText = playerData.spins;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
@@ -387,13 +368,13 @@
 
     function updateQuestUI() {
       const q1 = Math.min(playerData.drawCount || 0, 5);
-      const q2 = Math.min((playerData.unlockedCards || []).length, 3);
+      const q2 = Math.min((playerData.unlockedCards || []).length, 2);
       document.getElementById('q1Prog').innerText = q1;
       document.getElementById('q2Prog').innerText = q2;
 
       const claimed = playerData.claimedQuests || [];
       document.getElementById('q1Btn').disabled = claimed.includes(1) || q1 < 5;
-      document.getElementById('q2Btn').disabled = claimed.includes(2) || q2 < 3;
+      document.getElementById('q2Btn').disabled = claimed.includes(2) || q2 < 2;
     }
 
     document.getElementById('q1Btn').addEventListener('click', () => claimQuest(1, 3));
