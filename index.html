@@ -45,7 +45,7 @@
     }
     .pity-container { width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; margin-top: 5px; overflow: hidden; }
     .pity-bar { height: 100%; background: linear-gradient(90deg, #3498db, #e74c3c); width: 0%; transition: width 0.4s ease; }
-    .card { width: 230px; height: 340px; perspective: 1000px; margin: 25px auto; cursor: pointer; }
+    .card { width: 230px; height: 340px; perspective: 1000px; margin: 25px auto; }
     .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; }
     .card-inner.flipped { transform: rotateY(180deg); }
     .card-front, .card-back {
@@ -56,8 +56,7 @@
     .card-front { background: #1a252f; border: 4px solid #fff; justify-content: center; }
     .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; }
     .card-back img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; }
-    .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; }
-    /* สีพิเศษสำหรับป้าย UL */
+    .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; z-index: 5; }
     .rarity-badge.ul { background: linear-gradient(135deg, #f1c40f, #e67e22, #e74c3c); color: #fff; animation: glow 1.5s infinite alternate; }
     @keyframes glow {
       from { box-shadow: 0 0 5px #f1c40f; }
@@ -89,7 +88,7 @@
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content { background: #fff; color: #333; border: 4px solid #f1c40f; border-radius: 20px; padding: 25px; width: 300px; text-align: center; position: relative; }
     .modal-content img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; }
-    .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #777; }
+    .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #777; z-index: 10; }
   </style>
 </head>
 <body>
@@ -129,7 +128,7 @@
 
       <div class="card" id="card">
         <div class="card-inner" id="cardInner">
-          <div class="card-front"><span style="font-size: 4rem;">❓</span><p>แตะเพื่อสุ่ม</p></div>
+          <div class="card-front"><span style="font-size: 4rem;">❓</span><p>พร้อมสุ่ม</p></div>
           <div class="card-back" id="cardBack">
             <span class="rarity-badge" id="cardRarity">N</span>
             <img id="cardImage" src="" alt="Card">
@@ -201,7 +200,7 @@
   </div>
 
   <div class="modal-overlay" id="cardModal">
-    <div class="modal-content">
+    <div class="modal-content" id="modalBox">
       <span class="close-btn" id="closeModalBtn">&times;</span>
       <span class="rarity-badge" id="modalRarity">UR</span>
       <img id="modalImage" src="" alt="Card">
@@ -227,14 +226,12 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
-    // รายการการ์ดทั้งหมด (Reiko Kashima เปลี่ยนเป็นระดับ UL แล้ว)
     const cards = [
       { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'images/ryoma.png' },
       { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg' },
       { id: 3, title: 'Reiko Kashima', rarity: 'UL', desc: 'ภูตผีสาวระดับตำนานเมืองสุดหายาก', image: 'images/dandadan1.png' }
     ];
 
-    // พูลสำหรับสุ่มกาชา (ปีศาจขุมนรก 99.99%, Reiko Kashima ระดับ UL โอกาส 0.01%)
     const gachaPool = [
       { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg', rate: 99.99 },
       { id: 3, title: 'Reiko Kashima', rarity: 'UL', desc: 'ภูตผีสาวระดับตำนานเมืองสุดหายาก', image: 'images/dandadan1.png', rate: 0.01 }
@@ -354,7 +351,6 @@
       playerData.drawCount = (playerData.drawCount || 0) + 1;
       playerData.pity = (playerData.pity || 0) + 1;
 
-      // สุ่มการ์ดตามเรตเปอร์เซ็นต์
       let rand = Math.random() * 100;
       let cumulative = 0;
       let cardObj = gachaPool[0];
@@ -389,7 +385,9 @@
       initCollection();
       updateTradeCardSelect();
 
-      document.getElementById('cardInner').classList.toggle('flipped');
+      // สลับการ์ดให้หมุนโชว์ผลลัพธ์
+      const cardInner = document.getElementById('cardInner');
+      cardInner.classList.add('flipped');
     });
 
     function updateQuestUI() {
@@ -444,7 +442,9 @@
         const item = document.createElement('div');
         item.className = `collection-item ${isUnlocked ? 'unlocked' : ''}`;
         item.innerHTML = `<img src="${c.image}"><div style="font-size:0.75rem; font-weight:bold; margin-top:4px;">${c.title}</div>`;
-        if (isUnlocked) item.addEventListener('click', () => openModal(c));
+        if (isUnlocked) {
+          item.addEventListener('click', () => openModal(c));
+        }
         grid.appendChild(item);
       });
       document.getElementById('collectedCount').innerText = unlocked.length;
@@ -464,7 +464,19 @@
       document.getElementById('modalDesc').innerText = c.desc;
       document.getElementById('cardModal').classList.add('active');
     }
-    document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('cardModal').classList.remove('active'));
+
+    // ปิด Modal เมื่อกดปุ่ม X
+    document.getElementById('closeModalBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('cardModal').classList.remove('active');
+    });
+
+    // ปิด Modal เมื่อคลิกพื้นที่สีดำรอบนอก
+    document.getElementById('cardModal').addEventListener('click', (e) => {
+      if (e.target.id === 'cardModal') {
+        document.getElementById('cardModal').classList.remove('active');
+      }
+    });
 
     document.getElementById('tabCards').addEventListener('click', () => switchLeaderboard('cards'));
     document.getElementById('tabSpins').addEventListener('click', () => switchLeaderboard('spins'));
@@ -617,7 +629,7 @@
       initCollection();
     }
 
-    function resetTradeId() {
+    function resetTradeUI() {
       currentTradeId = null;
       document.getElementById('tradeInit').style.display = 'block';
       document.getElementById('tradeRoom').style.display = 'none';
