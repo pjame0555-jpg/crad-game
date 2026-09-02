@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Fixed Auth UI)</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition</title>
+
+  <!-- โหลด Firebase SDK แบบ Compat (เสถียรที่สุดสำหรับมือถือและ GitHub Pages) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
@@ -226,11 +232,7 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, set, get, child, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyANzE04i1AQXO8oqUP6i8oqfMNW1GQlhB4",
       authDomain: "my-game-card.firebaseapp.com",
@@ -241,11 +243,11 @@
       appId: "1:718520908168:web:211e865318c8516f3f623d"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-    setPersistence(auth, browserLocalPersistence).catch(console.error);
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
     const cards = [
       { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'https://via.placeholder.com/200x300/e74c3c/ffffff?text=Ryoma+UR' },
@@ -295,38 +297,21 @@
 
       try {
         if (isRegisterMode) {
-          await createUserWithEmailAndPassword(auth, email, password);
+          await auth.createUserWithEmailAndPassword(email, password);
           alert('🎉 สมัครสมาชิกสำเร็จ!');
         } else {
-          await signInWithEmailAndPassword(auth, email, password);
+          await auth.signInWithEmailAndPassword(email, password);
         }
       } catch (error) {
         console.error(error);
-        switch (error.code) {
-          case 'auth/unauthorized-domain':
-            alert('❌ โดเมนนี้ยังไม่ได้รับอนุญาต! ให้ไปเพิ่ม pjame0555-jpg.github.io ใน Firebase Console');
-            break;
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-          case 'auth/invalid-credential':
-            alert('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง (หากยังไม่มีบัญชีให้กดสลับไปที่ "สมัครสมาชิกที่นี่")');
-            break;
-          case 'auth/email-already-in-use':
-            alert('❌ อีเมลนี้ถูกใช้งานแล้ว กรุณากดสลับไปที่ "เข้าสู่ระบบ"');
-            break;
-          case 'auth/weak-password':
-            alert('❌ รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
-            break;
-          default:
-            alert('❌ เกิดข้อผิดพลาด: ' + error.message);
-        }
+        alert('❌ เกิดข้อผิดพลาด: ' + error.message);
       } finally {
         authBtn.disabled = false;
         authBtn.innerText = isRegisterMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
       }
     });
 
-    onAuthStateChanged(auth, async (user) => {
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentUser = user;
         username = user.email ? user.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : 'user_' + user.uid.substring(0, 5);
@@ -334,14 +319,14 @@
         showGameContent();
 
         try {
-          const snapshot = await get(child(ref(db), `users/${user.uid}`));
+          const snapshot = await db.ref(`users/${user.uid}`).once('value');
           if (snapshot.exists()) {
             playerData = Object.assign({ unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] }, snapshot.val());
           } else {
             playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
             await saveDataOnline();
           }
-          await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
+          await db.ref(`usernames/${username}`).set({ uid: user.uid, email: user.email });
 
           showGameContent();
           listenForTradeRequests();
@@ -351,25 +336,25 @@
         }
       } else {
         currentUser = null;
-        document.getElementById('authBox').style.setProperty('display', 'block', 'important');
-        document.getElementById('gameContent').style.setProperty('display', 'none', 'important');
+        document.getElementById('authBox').style.display = 'block';
+        document.getElementById('gameContent').style.display = 'none';
       }
     });
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      signOut(auth).then(() => {
-        document.getElementById('authBox').style.setProperty('display', 'block', 'important');
-        document.getElementById('gameContent').style.setProperty('display', 'none', 'important');
+      auth.signOut().then(() => {
+        document.getElementById('authBox').style.display = 'block';
+        document.getElementById('gameContent').style.display = 'none';
       });
     });
 
     async function saveDataOnline() {
-      if (currentUser) await set(ref(db, 'users/' + currentUser.uid), playerData);
+      if (currentUser) await db.ref('users/' + currentUser.uid).set(playerData);
     }
 
     function showGameContent() {
-      document.getElementById('authBox').style.setProperty('display', 'none', 'important');
-      document.getElementById('gameContent').style.setProperty('display', 'block', 'important');
+      document.getElementById('authBox').style.display = 'none';
+      document.getElementById('gameContent').style.display = 'block';
       document.getElementById('playerDisplay').innerText = username;
       document.getElementById('spinsDisplay').innerText = playerData.spins;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount || 0;
@@ -401,4 +386,30 @@
         let cumulative = 0;
         for (let c of gachaPool) {
           cumulative += c.rate;
-          if (rand <= cumulative) { cardObj 
+          if (rand <= cumulative) { cardObj = c; break; }
+        }
+        if (!cardObj) cardObj = gachaPool[gachaPool.length - 1];
+      }
+
+      document.getElementById('spinsDisplay').innerText = playerData.spins;
+      document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
+      updatePityDisplay();
+
+      document.getElementById('cardRarity').innerText = cardObj.rarity;
+      document.getElementById('cardImage').src = cardObj.image;
+      document.getElementById('cardTitle').innerText = cardObj.title;
+      document.getElementById('cardDesc').innerText = cardObj.desc;
+
+      if (!playerData.unlockedCards.includes(cardObj.id)) playerData.unlockedCards.push(cardObj.id);
+
+      await saveDataOnline();
+      updateQuestUI();
+      initCollection();
+      updateTradeCardSelect();
+
+      document.getElementById('cardInner').classList.toggle('flipped');
+    });
+
+    function updateQuestUI() {
+      const q1 = Math.min(playerData.drawCount || 0, 5);
+      const q2 = Math.min((playerData.unlockedCards || []).length,
