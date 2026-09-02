@@ -18,7 +18,6 @@
     }
     .container { text-align: center; width: 90%; max-width: 600px; }
     
-    /* Promo Banner Style */
     .promo-banner {
       background: linear-gradient(45deg, #ff416c, #ff4b2b);
       border: 3px solid #ffeaa7;
@@ -100,7 +99,6 @@
     .trade-grid { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
     .trade-col { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 45%; }
 
-    /* Leaderboard Style */
     .leaderboard-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
     .leaderboard-tab { background: rgba(255, 255, 255, 0.2); border: none; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; }
     .leaderboard-tab.active { background: #f1c40f; color: #333; font-weight: bold; }
@@ -110,7 +108,6 @@
     .leaderboard-item:nth-child(2) { border-left: 5px solid #c0c0c0; background: rgba(192, 192, 192, 0.2); }
     .leaderboard-item:nth-child(3) { border-left: 5px solid #cd7f32; background: rgba(205, 127, 50, 0.2); }
 
-    /* Modal หน้าต่างดูการ์ดแบบเต็ม */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85);
@@ -137,7 +134,6 @@
 
   <div class="container">
     
-    <!-- Banner โฆษณาแจกฟรี -->
     <div class="promo-banner">
       <h2>🔥 แจกฟรี! การ์ดระดับ UR สุดแรร์ 🔥</h2>
       <p>แจกการ์ด <strong>Ryoma (Ailing Samurai - SNK)</strong> ลิมิเต็ดฟรี เพียงใส่โค้ดด้านล่างนี้!</p>
@@ -146,7 +142,6 @@
 
     <h1>🎴 เกมสุ่มการ์ดวัดดวง (Online)</h1>
 
-    <!-- Auth Box (Login / Register) -->
     <div class="auth-box" id="authBox">
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
       <input type="email" id="emailInput" placeholder="อีเมล (เช่น user@game.com)"><br>
@@ -156,7 +151,6 @@
       <span class="toggle-link" id="toggleAuth" onclick="toggleAuthMode()">ยังไม่มีบัญชี? สมัครสมาชิกที่นี่</span>
     </div>
 
-    <!-- Main Game UI -->
     <div class="game-content" id="gameContent" style="display: none;">
       <div class="player-bar">
         <span>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></span>
@@ -179,14 +173,12 @@
 
       <button id="drawBtn" onclick="drawCard()">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
 
-      <!-- Section: Redeem Code -->
       <div class="redeem-box">
         <h2>🎁 กรอกโค้ดรับรางวัล (Redeem Code)</h2>
         <input type="text" id="redeemCodeInput" placeholder="กรอกโค้ดที่นี่..."><br>
         <button class="btn-purple" onclick="redeemCode()">รับรางวัล</button>
       </div>
 
-      <!-- Section: Leaderboard -->
       <div class="leaderboard-box">
         <h2>🏆 อันดับผู้เล่นสูงสุด (Leaderboard)</h2>
         <div class="leaderboard-tabs">
@@ -198,7 +190,6 @@
         </ul>
       </div>
 
-      <!-- Section: Trade System -->
       <div class="trade-box">
         <h2>🔄 ระบบแลกเปลี่ยนการ์ด (Trade)</h2>
         <div id="tradeInit">
@@ -225,7 +216,6 @@
         </div>
       </div>
 
-      <!-- Collection -->
       <div class="collection-section">
         <h2>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h2>
         <p style="font-size: 0.85rem; color: #ddd;">(คลิกการ์ดที่คุณปลดล็อกแล้วเพื่อดูขนาดเต็ม)</p>
@@ -234,7 +224,6 @@
     </div>
   </div>
 
-  <!-- Modal ป๊อปอัปดูการ์ดเต็ม -->
   <div class="modal-overlay" id="cardModal" onclick="closeCardModal(event)">
     <div class="modal-content">
       <span class="close-btn" onclick="closeCardModal(event)">&times;</span>
@@ -316,24 +305,27 @@
         currentUser = user;
         username = user.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
         
-        const dbRef = ref(db);
-        const snapshot = await get(child(dbRef, `users/${user.uid}`));
+        try {
+          const dbRef = ref(db);
+          const snapshot = await get(child(dbRef, `users/${user.uid}`));
 
-        if (snapshot.exists()) {
-          playerData = snapshot.val();
-          if (playerData.spins === undefined) {
-            playerData.spins = 10;
+          if (snapshot.exists()) {
+            playerData = snapshot.val();
+            if (playerData.spins === undefined) playerData.spins = 10;
+          } else {
+            playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
+            await saveDataOnline();
           }
-        } else {
-          playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
-          await saveDataOnline();
+
+          await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
+
+          showGameContent();
+          listenForTradeRequests();
+          listenForLeaderboard();
+        } catch (e) {
+          console.error("Data Load Error:", e);
+          showGameContent();
         }
-
-        await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
-
-        showGameContent();
-        listenForTradeRequests();
-        listenForLeaderboard();
       } else {
         currentUser = null;
         if (currentTradeId) cancelTrade();
@@ -348,7 +340,11 @@
 
     async function saveDataOnline() {
       if (!currentUser) return;
-      await set(ref(db, 'users/' + currentUser.uid), playerData);
+      try {
+        await set(ref(db, 'users/' + currentUser.uid), playerData);
+      } catch (e) {
+        console.error("Save Error:", e);
+      }
     }
 
     function showGameContent() {
@@ -406,7 +402,6 @@
       document.getElementById('collectedCount').innerText = unlockedList.length;
     }
 
-    /* --- ระบบ Leaderboard (ลีดเดอร์บอร์ด) --- */
     window.switchLeaderboard = function(type) {
       currentLeaderboardTab = type;
       document.getElementById('tabCards').classList.toggle('active', type === 'cards');
@@ -422,6 +417,8 @@
           allUsersCache = snapshot.val();
           renderLeaderboard();
         }
+      }, (error) => {
+        console.error("Leaderboard Error:", error);
       });
     }
 
@@ -469,4 +466,7 @@
           : `⚡ ${user.spinCount} สปิน`;
 
         li.innerHTML = `
-          <span><st
+          <span><strong>${badge}</strong> ${user.username}</span>
+          <span style="color: #f1c40f; font-weight: bold;">${valueText}</span>
+        `;
+    
