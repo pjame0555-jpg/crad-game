@@ -3,111 +3,349 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง (Login, Trade & Redeem)</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Login, Trade & Redeem)</title>
   <style>
+    /* ==========================================================================
+       1. GLOBAL STYLES & ANIMATIONS
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       margin: 0;
-      color: white;
+      color: #ffffff;
       padding: 20px 0;
+      overflow-x: hidden;
     }
-    .container { text-align: center; width: 90%; max-width: 600px; }
-    
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.3);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f1c40f;
+      border-radius: 4px;
+    }
+
+    .container {
+      text-align: center;
+      width: 95%;
+      max-width: 750px;
+    }
+
+    /* ==========================================================================
+       2. PROMO BANNER & COMPONENTS
+       ========================================================================== */
     .promo-banner {
       background: linear-gradient(45deg, #ff416c, #ff4b2b);
       border: 3px solid #ffeaa7;
       border-radius: 15px;
       padding: 15px 20px;
       margin-bottom: 20px;
-      box-shadow: 0 0 20px rgba(255, 75, 43, 0.6);
+      box-shadow: 0 0 25px rgba(255, 75, 43, 0.7);
       animation: pulse 1.8s infinite alternate;
+      position: relative;
+      overflow: hidden;
     }
-    .promo-banner h2 { margin: 0 0 5px 0; font-size: 1.4rem; color: #fff; text-shadow: 1px 1px 3px #000; }
-    .promo-banner p { margin: 5px 0; font-size: 0.95rem; }
+
+    .promo-banner h2 {
+      margin: 0 0 5px 0;
+      font-size: 1.5rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+    }
+
+    .promo-banner p {
+      margin: 5px 0;
+      font-size: 1rem;
+    }
+
     .code-badge {
       display: inline-block;
       background: #ffeaa7;
       color: #d63031;
       font-weight: bold;
-      font-size: 1.2rem;
-      padding: 4px 12px;
+      font-size: 1.3rem;
+      padding: 4px 15px;
       border-radius: 8px;
       margin-top: 5px;
       border: 2px dashed #d63031;
-      letter-spacing: 1px;
-    }
-    @keyframes pulse {
-      0% { transform: scale(0.99); box-shadow: 0 0 10px rgba(255, 75, 43, 0.5); }
-      100% { transform: scale(1.02); box-shadow: 0 0 25px rgba(255, 234, 167, 0.9); }
+      letter-spacing: 2px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    .auth-box, .trade-box, .redeem-box, .collection-section, .leaderboard-box {
-      background: rgba(255, 255, 255, 0.1);
+    @keyframes pulse {
+      0% { transform: scale(0.98); box-shadow: 0 0 10px rgba(255, 75, 43, 0.5); }
+      100% { transform: scale(1.02); box-shadow: 0 0 30px rgba(255, 234, 167, 0.9); }
+    }
+
+    .auth-box, .trade-box, .redeem-box, .collection-section, .leaderboard-box, .quest-box, .shop-box {
+      background: rgba(255, 255, 255, 0.07);
       padding: 25px;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      margin-top: 20px;
+      border-radius: 18px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      margin-top: 25px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: all 0.3s ease;
     }
+
     input, select {
-      padding: 10px 15px;
+      padding: 12px 18px;
       font-size: 1rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      width: 80%;
-      margin-bottom: 12px;
-      box-sizing: border-box;
-    }
-    .player-bar {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px 15px;
       border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      width: 80%;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    input:focus, select:focus {
+      border-color: #f1c40f;
+      box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    }
+
+    /* ==========================================================================
+       3. PLAYER STATS BAR & PITY SYSTEM
+       ========================================================================== */
+    .player-bar {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 15px 20px;
+      border-radius: 12px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      gap: 10px;
     }
-    .card { width: 220px; height: 330px; perspective: 1000px; margin: 20px auto; cursor: pointer; }
-    .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
-    .card-inner.flipped { transform: rotateY(180deg); }
+
+    .pity-container {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      height: 12px;
+      margin-top: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pity-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* ==========================================================================
+       4. CARD DISPLAY & FLIP ANIMATIONS
+       ========================================================================== */
+    .card {
+      width: 240px;
+      height: 360px;
+      perspective: 1000px;
+      margin: 25px auto;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+    }
+
+    .card-inner.flipped {
+      transform: rotateY(180deg);
+    }
+
     .card-front, .card-back {
-      position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
-      border-radius: 15px; display: flex; flex-direction: column; justify-content: space-between;
-      align-items: center; padding: 15px; box-sizing: border-box;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    .card-front { background: linear-gradient(45deg, #0f2027, #203a43, #2c5364); border: 4px solid #fff; justify-content: center; }
-    .card-front span { font-size: 4rem; }
-    .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; box-shadow: 0 0 25px rgba(241, 196, 15, 1); }
-    .rarity-badge { position: absolute; top: 10px; right: 10px; background: #333; color: #fff; padding: 2px 8px; border-radius: 10px; }
-    .card-back img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; margin-top: 15px; }
-    button { background-color: #e74c3c; color: white; border: none; padding: 10px 20px; font-size: 1rem; border-radius: 20px; cursor: pointer; margin: 5px; }
-    button:disabled { background-color: #7f8c8d; cursor: not-allowed; }
-    .btn-green { background-color: #2ecc71; }
-    .btn-purple { background-color: #9b59b6; }
-    .btn-sm { padding: 5px 12px; font-size: 0.8rem; border-radius: 12px; background-color: #7f8c8d; }
-    .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
-    
-    .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-    .collection-item { background: #2a2a40; border-radius: 8px; padding: 8px; opacity: 0.3; filter: grayscale(100%); transition: all 0.3s; cursor: pointer; }
-    .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
-    .collection-item img { width: 100%; height: 60px; object-fit: cover; border-radius: 4px; }
-    
-    .trade-grid { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
-    .trade-col { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 45%; }
+
+    .card-front {
+      background: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
+      border: 4px solid #fff;
+      justify-content: center;
+    }
+
+    .card-front span {
+      font-size: 4.5rem;
+      animation: float 2s infinite ease-in-out alternate;
+    }
+
+    @keyframes float {
+      from { transform: translateY(-5px); }
+      to { transform: translateY(5px); }
+    }
+
+    .card-back {
+      background: #ffffff;
+      color: #333;
+      transform: rotateY(180deg);
+      border: 4px solid #f1c40f;
+    }
+
+    .card-back.ur-glow {
+      border-color: #e74c3c;
+      box-shadow: 0 0 35px rgba(231, 76, 60, 0.9);
+    }
+
+    .rarity-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #2c3e50;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .card-back img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-top: 15px;
+      border: 2px solid #ddd;
+    }
+
+    /* ==========================================================================
+       5. BUTTONS & UI CONTROLS
+       ========================================================================== */
+    button {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      margin: 6px;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      background: #7f8c8d;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); }
+    .btn-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4); }
+    .btn-blue { background: linear-gradient(135deg, #3498db, #2980b9); box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4); }
+    .btn-sm { padding: 6px 14px; font-size: 0.85rem; border-radius: 15px; }
+
+    .toggle-link {
+      color: #3498db;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    .toggle-link:hover { color: #5dade2; }
+
+    /* ==========================================================================
+       6. COLLECTION & GRID SYSTEM
+       ========================================================================== */
+    .collection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .collection-item {
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      padding: 10px;
+      opacity: 0.35;
+      filter: grayscale(100%);
+      transition: all 0.3s;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .collection-item.unlocked {
+      opacity: 1;
+      filter: grayscale(0%);
+      border: 2px solid #f1c40f;
+      background: #ffffff;
+      color: #333;
+      box-shadow: 0 4px 12px rgba(241, 196, 15, 0.3);
+    }
+
+    .collection-item.unlocked:hover {
+      transform: scale(1.05);
+    }
+
+    .collection-item img {
+      width: 100%;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    /* ==========================================================================
+       7. LEADERBOARD & TRADE SYSTEM
+       ========================================================================== */
+    .trade-grid { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; gap: 15px; }
+    .trade-col { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; width: 50%; border: 1px solid rgba(255,255,255,0.1); }
 
     .leaderboard-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-    .leaderboard-tab { background: rgba(255, 255, 255, 0.2); border: none; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; }
+    .leaderboard-tab { background: rgba(255, 255, 255, 0.15); border: none; padding: 8px 18px; border-radius: 20px; font-size: 0.9rem; color: #fff; cursor: pointer; }
     .leaderboard-tab.active { background: #f1c40f; color: #333; font-weight: bold; }
     .leaderboard-list { list-style: none; padding: 0; margin: 0; text-align: left; }
-    .leaderboard-item { display: flex; justify-content: space-between; padding: 10px 15px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; margin-bottom: 8px; }
-    .leaderboard-item:nth-child(1) { border-left: 5px solid #ffd700; background: rgba(255, 215, 0, 0.2); }
-    .leaderboard-item:nth-child(2) { border-left: 5px solid #c0c0c0; background: rgba(192, 192, 192, 0.2); }
-    .leaderboard-item:nth-child(3) { border-left: 5px solid #cd7f32; background: rgba(205, 127, 50, 0.2); }
+    .leaderboard-item { display: flex; justify-content: space-between; padding: 12px 18px; background: rgba(0, 0, 0, 0.4); border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #7f8c8d; }
+    .leaderboard-item:nth-child(1) { border-left-color: #ffd700; background: rgba(255, 215, 0, 0.15); }
+    .leaderboard-item:nth-child(2) { border-left-color: #c0c0c0; background: rgba(192, 192, 192, 0.15); }
+    .leaderboard-item:nth-child(3) { border-left-color: #cd7f32; background: rgba(205, 127, 50, 0.15); }
 
+    /* ==========================================================================
+       8. MODAL WINDOWS
+       ========================================================================== */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85);
@@ -117,16 +355,16 @@
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content {
       background: #fff; color: #333; border: 4px solid #f1c40f;
-      border-radius: 15px; padding: 20px; width: 280px; max-width: 90%;
-      text-align: center; position: relative; box-shadow: 0 0 30px rgba(241, 196, 15, 0.8);
+      border-radius: 20px; padding: 25px; width: 300px; max-width: 90%;
+      text-align: center; position: relative; box-shadow: 0 0 40px rgba(241, 196, 15, 0.8);
       animation: modalPop 0.3s ease-out;
     }
     @keyframes modalPop {
-      from { transform: scale(0.8); opacity: 0; }
+      from { transform: scale(0.7); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-    .modal-content img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
-    .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #777; font-weight: bold; }
+    .modal-content img { width: 100%; height: 220px; object-fit: cover; border-radius: 12px; margin-top: 15px; }
+    .close-btn { position: absolute; top: 12px; right: 18px; font-size: 1.8rem; cursor: pointer; color: #777; font-weight: bold; }
     .close-btn:hover { color: #000; }
   </style>
 </head>
@@ -139,8 +377,9 @@
       <div class="code-badge">โค้ด: snk</div>
     </div>
 
-    <h1>🎴 เกมสุ่มการ์ดวัดดวง (Online)</h1>
+    <h1>🎴 เกมสุ่มการ์ดวัดดวง (Online System)</h1>
 
+    <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
       <input type="email" id="emailInput" placeholder="อีเมล (เช่น user@game.com)"><br>
@@ -150,34 +389,60 @@
       <span class="toggle-link" id="toggleAuth" onclick="toggleAuthMode()">ยังไม่มีบัญชี? สมัครสมาชิกที่นี่</span>
     </div>
 
+    <!-- MAIN GAME CONTENT -->
     <div class="game-content" id="gameContent" style="display: none;">
       <div class="player-bar">
-        <span>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></span>
-        <span>⚡ สปินคงเหลือ: <strong id="spinsDisplay" style="color: #f1c40f;">10</strong></span>
-        <span>🎲 สุ่มไปแล้ว: <strong id="drawCountDisplay">0</strong> ครั้ง</span>
+        <div>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></div>
+        <div>⚡ สปินคงเหลือ: <strong id="spinsDisplay" style="color: #f1c40f;">10</strong></div>
+        <div>🎲 สุ่มไปแล้ว: <strong id="drawCountDisplay">0</strong> ครั้ง</div>
         <button class="btn-sm" onclick="logout()">ออกจากระบบ</button>
+        
+        <div style="width: 100%; text-align: left; margin-top: 5px; font-size: 0.85rem; color: #aaa;">
+          การันตี UR/SSR ในอีก: <span id="pityCount" style="color: #e74c3c; font-weight: bold;">10</span> ครั้ง
+          <div class="pity-container">
+            <div class="pity-bar" id="pityBar"></div>
+          </div>
+        </div>
       </div>
 
+      <!-- GACHA CARD ARENA -->
       <div class="card" id="card">
         <div class="card-inner" id="cardInner">
           <div class="card-front"><span>❓</span><p>คลิกเพื่อเปิดการ์ด</p></div>
           <div class="card-back" id="cardBack">
             <span class="rarity-badge" id="cardRarity">N</span>
             <img id="cardImage" src="" alt="Card Image">
-            <h2 id="cardTitle">ชื่อการ์ด</h2>
-            <p id="cardDesc">รายละเอียดการ์ด</p>
+            <h2 id="cardTitle" style="margin: 10px 0 5px 0; font-size: 1.2rem;">ชื่อการ์ด</h2>
+            <p id="cardDesc" style="font-size: 0.85rem; color: #555;">รายละเอียดการ์ด</p>
           </div>
         </div>
       </div>
 
       <button id="drawBtn" onclick="drawCard()">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
 
+      <!-- QUEST SYSTEM -->
+      <div class="quest-box">
+        <h2>📜 ภารกิจประจำวัน (Daily Quests)</h2>
+        <div id="questList" style="text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span>🎲 สุ่มการ์ดครบ 5 ครั้ง (<span id="q1Prog">0</span>/5)</span>
+            <button class="btn-sm btn-green" id="q1Btn" onclick="claimQuest(1)">รับ +3 สปิน</button>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🎴 สะสมการ์ดครบ 3 ใบ (<span id="q2Prog">0</span>/3)</span>
+            <button class="btn-sm btn-green" id="q2Btn" onclick="claimQuest(2)">รับ +5 สปิน</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- REDEEM SYSTEM -->
       <div class="redeem-box">
         <h2>🎁 กรอกโค้ดรับรางวัล (Redeem Code)</h2>
         <input type="text" id="redeemCodeInput" placeholder="กรอกโค้ดที่นี่..."><br>
         <button class="btn-purple" onclick="redeemCode()">รับรางวัล</button>
       </div>
 
+      <!-- LEADERBOARD SYSTEM -->
       <div class="leaderboard-box">
         <h2>🏆 อันดับผู้เล่นสูงสุด (Leaderboard)</h2>
         <div class="leaderboard-tabs">
@@ -189,8 +454,9 @@
         </ul>
       </div>
 
+      <!-- TRADE SYSTEM -->
       <div class="trade-box">
-        <h2>🔄 ระบบแลกเปลี่ยนการ์ด (Trade)</h2>
+        <h2>🔄 ระบบแลกเปลี่ยนการ์ด (Trade System)</h2>
         <div id="tradeInit">
           <input type="text" id="targetPlayerInput" placeholder="พิมพ์ชื่ออีเมลเพื่อนก่อน @ (เช่น friend)...">
           <button class="btn-green" onclick="startTrade()">สร้างห้องเทรด</button>
@@ -215,14 +481,16 @@
         </div>
       </div>
 
+      <!-- COLLECTION SECTION -->
       <div class="collection-section">
         <h2>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h2>
-        <p style="font-size: 0.85rem; color: #ddd;">(คลิกการ์ดที่คุณปลดล็อกแล้วเพื่อดูขนาดเต็ม)</p>
+        <p style="font-size: 0.85rem; color: #ddd;">(คลิกการ์ดที่คุณปลดล็อกแล้วเพื่อดูรายละเอียดเต็ม)</p>
         <div class="collection-grid" id="collectionGrid"></div>
       </div>
     </div>
   </div>
 
+  <!-- MODAL FOR CARD DETAILS -->
   <div class="modal-overlay" id="cardModal" onclick="closeCardModal(event)">
     <div class="modal-content">
       <span class="close-btn" onclick="closeCardModal(event)">&times;</span>
@@ -233,11 +501,29 @@
     </div>
   </div>
 
+  <!-- FIREBASE MODULES & SCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, set, get, child, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getDatabase, 
+      ref, 
+      set, 
+      get, 
+      child, 
+      onValue, 
+      remove 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+    // ==========================================================================
+    // FIREBASE INITIALIZATION
+    // ==========================================================================
     const firebaseConfig = {
       apiKey: "AIzaSyANzE04i1AQXO8oqUP6i8oqfMNW1GQlhB4",
       authDomain: "my-game-card.firebaseapp.com",
@@ -253,201 +539,16 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    // ==========================================================================
+    // DATABASE & GACHA CONFIGURATION
+    // ==========================================================================
     const cards = [
       { id: 1, title: 'Ryoma (Ailing Samurai - SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง คอลแลบพิเศษกับ SNK!', image: 'images/ryoma.png' },
-      { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' }
+      { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' },
+      { id: 3, title: 'อัศวินเกราะเหล็ก', rarity: 'SR', desc: 'ผู้พิทักษ์อาณาจักร มีพลังป้องกันสูงส่ง', image: 'https://via.placeholder.com/200x300/34495e/ffffff?text=Knight+SR' },
+      { id: 4, title: 'นักเวทฝึกหัด', rarity: 'R', desc: 'ผู้เริ่มต้นร่ายคาถา มักทำไฟไหม้ตัวเอง', image: 'https://via.placeholder.com/200x300/2980b9/ffffff?text=Mage+R' },
+      { id: 5, title: 'สไลม์สีฟ้า', rarity: 'N', desc: 'มอนสเตอร์ตัวน้อย พบได้ตามทุ่งหญ้าทั่วไป', image: 'https://via.placeholder.com/200x300/2ecc71/ffffff?text=Slime+N' }
     ];
 
     const gachaPool = [
-      { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด พร้อมสูบวิญญาณ!', image: 'images/demon.jpe' }
-    ];
-
-    const promoCodes = {
-      'snk': { cardId: 1, rewardName: 'Ryoma (Ailing Samurai - SNK)' }
-    };
-
-    let isRegisterMode = false;
-    let currentUser = null;
-    let username = '';
-    let playerData = { unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
-    let isFlipped = false;
-    let currentTradeId = null;
-    let currentLeaderboardTab = 'cards';
-
-    window.toggleAuthMode = function() {
-      isRegisterMode = !isRegisterMode;
-      document.getElementById('authTitle').innerText = isRegisterMode ? '📝 สมัครสมาชิก' : '🔑 เข้าสู่ระบบ';
-      document.getElementById('authBtn').innerText = isRegisterMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
-      document.getElementById('toggleAuth').innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
-    };
-
-    window.handleAuth = async function() {
-      const email = document.getElementById('emailInput').value.trim();
-      const password = document.getElementById('passwordInput').value.trim();
-
-      if (!email || !password) return alert('กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
-
-      try {
-        if (isRegisterMode) {
-          await createUserWithEmailAndPassword(auth, email, password);
-          alert('สมัครสมาชิกสำเร็จ!');
-        } else {
-          await signInWithEmailAndPassword(auth, email, password);
-        }
-      } catch (error) {
-        console.error("Auth Error Code:", error.code, error.message);
-        if (error.code === 'auth/operation-not-allowed') {
-          alert('❌ ยังไม่ได้เปิดใช้งาน Email/Password ใน Firebase Console!\n(กรุณาไปที่ Firebase Console -> Authentication -> Sign-in method แล้วเปิดใช้งาน Email/Password)');
-        } else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-          alert('❌ ไม่พบบัญชีนี้ หรือรหัสผ่านไม่ถูกต้อง (หากยังไม่เคยสมัคร ให้กด "สมัครสมาชิก" ด้านล่างก่อน)');
-        } else if (error.code === 'auth/email-already-in-use') {
-          alert('❌ อีเมลนี้ถูกใช้งานแล้ว กรุณากดเข้าสู่ระบบแทน');
-        } else if (error.code === 'auth/weak-password') {
-          alert('❌ รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
-        } else if (error.code === 'auth/invalid-email') {
-          alert('❌ รูปแบบอีเมลไม่ถูกต้อง');
-        } else {
-          alert(`เกิดข้อผิดพลาด (${error.code}): ${error.message}`);
-        }
-      }
-    };
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        username = user.email ? user.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : 'user_' + user.uid.substring(0, 5);
-        
-        try {
-          const dbRef = ref(db);
-          const snapshot = await get(child(dbRef, `users/${user.uid}`));
-
-          if (snapshot.exists()) {
-            playerData = snapshot.val();
-            if (playerData.spins === undefined) playerData.spins = 10;
-            playerData.username = username;
-            playerData.email = user.email;
-          } else {
-            playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
-          }
-          
-          await saveDataOnline();
-
-          if (username) {
-            await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
-          }
-
-          showGameContent();
-          listenForTradeRequests();
-          listenForLeaderboard();
-        } catch (e) {
-          console.error("Data Load Error:", e);
-          showGameContent();
-        }
-      } else {
-        currentUser = null;
-        if (currentTradeId) cancelTrade();
-        document.getElementById('authBox').style.display = 'block';
-        document.getElementById('gameContent').style.display = 'none';
-      }
-    });
-
-    window.logout = function() {
-      signOut(auth);
-    };
-
-    async function saveDataOnline() {
-      if (!currentUser) return;
-      try {
-        await set(ref(db, 'users/' + currentUser.uid), playerData);
-      } catch (e) {
-        console.error("Save Error:", e);
-      }
-    }
-
-    function showGameContent() {
-      document.getElementById('authBox').style.display = 'none';
-      document.getElementById('gameContent').style.display = 'block';
-      document.getElementById('playerDisplay').innerText = username;
-      document.getElementById('spinsDisplay').innerText = playerData.spins !== undefined ? playerData.spins : 10;
-      document.getElementById('drawCountDisplay').innerText = playerData.drawCount || 0;
-      initCollection();
-      updateTradeCardSelect();
-    }
-
-    window.redeemCode = async function() {
-      const inputCode = document.getElementById('redeemCodeInput').value.trim().toLowerCase();
-      if (!inputCode) return alert('กรุณากรอกโค้ดก่อนครับ');
-
-      const codeData = promoCodes[inputCode];
-      if (!codeData) return alert('❌ โค้ดไม่ถูกต้องหรือหมดอายุ');
-
-      if (!playerData.usedCodes) playerData.usedCodes = [];
-      if (playerData.usedCodes.includes(inputCode)) return alert('⚠️ คุณเคยใช้งานโค้ดนี้ไปแล้ว!');
-
-      if (!playerData.unlockedCards) playerData.unlockedCards = [];
-      if (!playerData.unlockedCards.includes(codeData.cardId)) {
-        playerData.unlockedCards.push(codeData.cardId);
-      }
-
-      playerData.usedCodes.push(inputCode);
-      await saveDataOnline();
-
-      alert(`🎉 ยินดีด้วย! คุณได้รับรับการ์ดลิมิเต็ด: ${codeData.rewardName}`);
-      document.getElementById('redeemCodeInput').value = '';
-      initCollection();
-      updateTradeCardSelect();
-    };
-
-    function initCollection() {
-      const grid = document.getElementById('collectionGrid');
-      document.getElementById('totalCount').innerText = cards.length;
-      grid.innerHTML = '';
-      const unlockedList = playerData.unlockedCards || [];
-
-      cards.forEach(card => {
-        const isUnlocked = unlockedList.includes(card.id);
-        const item = document.createElement('div');
-        item.className = `collection-item ${isUnlocked ? 'unlocked' : ''}`;
-        item.innerHTML = `<img src="${card.image}" alt="${card.title}"><div style="font-size:0.7rem; font-weight:bold;">${card.title}</div>`;
-        
-        if (isUnlocked) {
-          item.onclick = () => openCardModal(card);
-        }
-
-        grid.appendChild(item);
-      });
-      document.getElementById('collectedCount').innerText = unlockedList.length;
-    }
-
-    window.switchLeaderboard = function(type) {
-      currentLeaderboardTab = type;
-      document.getElementById('tabCards').classList.toggle('active', type === 'cards');
-      document.getElementById('tabSpins').classList.toggle('active', type === 'spins');
-      renderLeaderboard();
-    };
-
-    let allUsersCache = {};
-    function listenForLeaderboard() {
-      const usersRef = ref(db, 'users');
-      onValue(usersRef, (snapshot) => {
-        if (snapshot.exists()) {
-          allUsersCache = snapshot.val();
-          renderLeaderboard();
-        }
-      }, (error) => {
-        console.error("Leaderboard Error:", error);
-      });
-    }
-
-    function renderLeaderboard() {
-      const listEl = document.getElementById('leaderboardList');
-      listEl.innerHTML = '';
-
-      let userArray = [];
-      for (let uid in allUsersCache) {
-        const u = allUsersCache[uid];
-        const cardCount = u.unlockedCards ? u.unlockedCards.length : 0;
-        const spinCount = u.spins !== undefined ? u.spins : 10;
-        
-        let displayName = u.username;
-        if (!displayName || displayName === 'Unkno
+      { id: 2, title: 'ปีศาจจากขุมนรก', rarity: 'SSR', desc: 'สิ่ง
