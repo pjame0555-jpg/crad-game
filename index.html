@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Fixed Auth)</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Fixed Auth & Debug)</title>
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
@@ -63,7 +63,6 @@
     }
     .card-front { background: #1a252f; border: 4px solid #fff; justify-content: center; }
     .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; }
-    .card-back.ur-glow { border-color: #e74c3c; box-shadow: 0 0 35px rgba(231, 76, 60, 0.9); }
     .card-back img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; }
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; }
 
@@ -116,7 +115,7 @@
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
       <form id="authForm">
         <input type="email" id="emailInput" placeholder="อีเมล (เช่น user@game.com)" required><br>
-        <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" required><br>
+        <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอัศร)" required><br>
         
         <button type="submit" id="authBtn">เข้าสู่ระบบ</button><br>
         <span class="toggle-link" id="toggleAuth">ยังไม่มีบัญชี? สมัครสมาชิกที่นี่</span>
@@ -271,14 +270,12 @@
     let currentLeaderboardTab = 'cards';
     let allUsersCache = {};
 
-    // Elements
     const authForm = document.getElementById('authForm');
     const authTitle = document.getElementById('authTitle');
     const authBtn = document.getElementById('authBtn');
     const toggleAuth = document.getElementById('toggleAuth');
     const drawBtn = document.getElementById('drawBtn');
 
-    // Auth Switch Mode
     toggleAuth.addEventListener('click', () => {
       isRegisterMode = !isRegisterMode;
       authTitle.innerText = isRegisterMode ? '📝 สมัครสมาชิก' : '🔑 เข้าสู่ระบบ';
@@ -286,7 +283,6 @@
       toggleAuth.innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
     });
 
-    // FIXED: Form Submission for Register vs Login
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('emailInput').value.trim();
@@ -298,20 +294,39 @@
       try {
         if (isRegisterMode) {
           await createUserWithEmailAndPassword(auth, email, password);
-          alert('สมัครสมาชิกสำเร็จ!');
+          alert('🎉 สมัครสมาชิกสำเร็จ!');
         } else {
           await signInWithEmailAndPassword(auth, email, password);
         }
       } catch (error) {
         console.error(error);
-        alert('เกิดข้อผิดพลาด: ' + error.message);
+        switch (error.code) {
+          case 'auth/unauthorized-domain':
+            alert('❌ โดเมนนี้ยังไม่ได้รับอนุญาต! ให้ไปเพิ่ม localhost หรือ domain ของคุณใน Firebase Console > Authentication > Settings > Authorized domains');
+            break;
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            alert('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง (หากยังไม่มีบัญชีให้กด "สมัครสมาชิกที่นี่")');
+            break;
+          case 'auth/email-already-in-use':
+            alert('❌ อีเมลนี้ถูกใช้งานแล้ว กรุณากดสลับไปที่ "เข้าสู่ระบบ"');
+            break;
+          case 'auth/weak-password':
+            alert('❌ รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+            break;
+          case 'auth/invalid-email':
+            alert('❌ รูปแบบอีเมลไม่ถูกต้อง');
+            break;
+          default:
+            alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+        }
       } finally {
         authBtn.disabled = false;
         authBtn.innerText = isRegisterMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
       }
     });
 
-    // Auth State Listener
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
@@ -332,6 +347,7 @@
           listenForLeaderboard();
         } catch(err) {
           console.error(err);
+          alert('❌ ไม่อ่าน/เขียนข้อมูลใน Database ได้ ให้ไปเช็กที่ Firebase Realtime Database Rules');
         }
       } else {
         currentUser = null;
@@ -364,7 +380,6 @@
       document.getElementById('pityBar').style.width = `${((playerData.pity % 10) / 10) * 100}%`;
     }
 
-    // Gacha Logic
     drawBtn.addEventListener('click', async () => {
       if (playerData.spins <= 0) return alert('❌ สปินหมดแล้ว!');
 
@@ -387,25 +402,4 @@
       }
 
       document.getElementById('spinsDisplay').innerText = playerData.spins;
-      document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
-      updatePityDisplay();
-
-      document.getElementById('cardRarity').innerText = cardObj.rarity;
-      document.getElementById('cardImage').src = cardObj.image;
-      document.getElementById('cardTitle').innerText = cardObj.title;
-      document.getElementById('cardDesc').innerText = cardObj.desc;
-
-      if (!playerData.unlockedCards.includes(cardObj.id)) playerData.unlockedCards.push(cardObj.id);
-
-      await saveDataOnline();
-      updateQuestUI();
-      initCollection();
-      updateTradeCardSelect();
-
-      document.getElementById('cardInner').classList.toggle('flipped');
-    });
-
-    // Quests
-    function updateQuestUI() {
-      const q1 = Math.min(playerData.drawCount || 0, 5);
-      const q2 = Math.min((playerData.unlockedCards || []
+      document.getElementById('drawCountDisplay').innerText = playerData.d
