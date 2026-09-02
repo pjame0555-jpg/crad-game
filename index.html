@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition</title>
 
+  <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -17,28 +18,17 @@
       display: flex; justify-content: center; align-items: center;
       min-height: 100vh; margin: 0; color: #ffffff; padding: 20px 0; overflow-x: hidden;
     }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
-    ::-webkit-scrollbar-thumb { background: #f1c40f; border-radius: 4px; }
-    
     .container { text-align: center; width: 95%; max-width: 750px; }
-
     .promo-banner {
       background: linear-gradient(45deg, #ff416c, #ff4b2b);
       border: 3px solid #ffeaa7; border-radius: 15px; padding: 15px 20px;
       margin-bottom: 20px; box-shadow: 0 0 25px rgba(255, 75, 43, 0.7);
-      animation: pulse 1.8s infinite alternate;
     }
     .code-badge {
       display: inline-block; background: #ffeaa7; color: #d63031;
       font-weight: bold; font-size: 1.2rem; padding: 4px 15px;
       border-radius: 8px; margin-top: 5px; border: 2px dashed #d63031;
     }
-    @keyframes pulse {
-      0% { transform: scale(0.98); }
-      100% { transform: scale(1.02); }
-    }
-
     .auth-box, .trade-box, .redeem-box, .collection-section, .leaderboard-box, .quest-box {
       background: rgba(255, 255, 255, 0.08); padding: 25px; border-radius: 18px;
       backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15);
@@ -49,7 +39,6 @@
       border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(0, 0, 0, 0.4);
       color: #fff; width: 80%; margin-bottom: 15px; outline: none;
     }
-
     .player-bar {
       background: rgba(0, 0, 0, 0.4); padding: 15px 20px; border-radius: 12px;
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
@@ -57,7 +46,6 @@
     }
     .pity-container { width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; margin-top: 5px; overflow: hidden; }
     .pity-bar { height: 100%; background: linear-gradient(90deg, #3498db, #e74c3c); width: 0%; transition: width 0.4s ease; }
-
     .card { width: 230px; height: 340px; perspective: 1000px; margin: 25px auto; cursor: pointer; }
     .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; }
     .card-inner.flipped { transform: rotateY(180deg); }
@@ -70,7 +58,6 @@
     .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; }
     .card-back img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; }
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; }
-
     button {
       background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none;
       padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 25px;
@@ -81,22 +68,18 @@
     .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
     .btn-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
     .btn-sm { padding: 6px 14px; font-size: 0.85rem; border-radius: 15px; }
-    .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; font-size: 0.95rem; }
-
+    .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; font-size: 0.95rem; display: inline-block; margin-top: 10px; }
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; margin-top: 15px; }
     .collection-item { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 8px; opacity: 0.35; filter: grayscale(100%); transition: all 0.3s; cursor: pointer; }
     .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
     .collection-item img { width: 100%; height: 65px; object-fit: cover; border-radius: 6px; }
-
     .trade-grid { display: flex; justify-content: space-around; gap: 15px; margin-top: 15px; }
     .trade-col { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; width: 50%; }
-
     .leaderboard-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
     .leaderboard-tab { background: rgba(255,255,255,0.15); border: none; padding: 6px 15px; border-radius: 20px; color: #fff; cursor: pointer; }
     .leaderboard-tab.active { background: #f1c40f; color: #333; font-weight: bold; }
     .leaderboard-list { list-style: none; padding: 0; margin: 0; text-align: left; }
     .leaderboard-item { display: flex; justify-content: space-between; padding: 10px 15px; background: rgba(0, 0, 0, 0.4); border-radius: 8px; margin-bottom: 8px; }
-
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content { background: #fff; color: #333; border: 4px solid #f1c40f; border-radius: 20px; padding: 25px; width: 300px; text-align: center; position: relative; }
@@ -115,6 +98,7 @@
 
     <h1>🎴 เกมสุ่มการ์ดออนไลน์</h1>
 
+    <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
       <div id="authForm">
@@ -126,6 +110,7 @@
       </div>
     </div>
 
+    <!-- MAIN GAME CONTENT -->
     <div id="gameContent" style="display: none;">
       <div class="player-bar">
         <div>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></div>
@@ -139,6 +124,7 @@
         </div>
       </div>
 
+      <!-- CARD ARENA -->
       <div class="card" id="card">
         <div class="card-inner" id="cardInner">
           <div class="card-front"><span style="font-size: 4rem;">❓</span><p>แตะเพื่อสุ่ม</p></div>
@@ -153,6 +139,7 @@
 
       <button id="drawBtn">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
 
+      <!-- QUEST SYSTEM -->
       <div class="quest-box">
         <h3>📜 ภารกิจประจำวัน (Daily Quests)</h3>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -165,12 +152,14 @@
         </div>
       </div>
 
+      <!-- REDEEM SYSTEM -->
       <div class="redeem-box">
         <h3>🎁 กรอกโค้ดรับรางวัล (Redeem Code)</h3>
         <input type="text" id="redeemCodeInput" placeholder="กรอกโค้ดที่นี่..."><br>
         <button class="btn-purple" id="redeemBtn">รับรางวัล</button>
       </div>
 
+      <!-- LEADERBOARD SYSTEM -->
       <div class="leaderboard-box">
         <h3>🏆 อันดับผู้เล่นสูงสุด (Leaderboard)</h3>
         <div class="leaderboard-tabs">
@@ -180,6 +169,7 @@
         <ul class="leaderboard-list" id="leaderboardList"></ul>
       </div>
 
+      <!-- TRADE SYSTEM -->
       <div class="trade-box">
         <h3>🔄 ระบบแลกเปลี่ยนการ์ด (Trade System)</h3>
         <div id="tradeInit">
@@ -205,6 +195,7 @@
         </div>
       </div>
 
+      <!-- COLLECTION SECTION -->
       <div class="collection-section">
         <h3>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h3>
         <div class="collection-grid" id="collectionGrid"></div>
@@ -212,6 +203,7 @@
     </div>
   </div>
 
+  <!-- MODAL -->
   <div class="modal-overlay" id="cardModal">
     <div class="modal-content">
       <span class="close-btn" id="closeModalBtn">&times;</span>
@@ -269,6 +261,7 @@
     const toggleAuth = document.getElementById('toggleAuth');
     const drawBtn = document.getElementById('drawBtn');
 
+    // สลับโหมด สมัคร / เข้าสู่ระบบ
     toggleAuth.addEventListener('click', () => {
       isRegisterMode = !isRegisterMode;
       authTitle.innerText = isRegisterMode ? '📝 สมัครสมาชิก' : '🔑 เข้าสู่ระบบ';
@@ -276,6 +269,7 @@
       toggleAuth.innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
     });
 
+    // ปุ่มกดดำเนินการ
     authBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
@@ -286,6 +280,7 @@
       }
 
       authBtn.disabled = true;
+      const originalText = authBtn.innerText;
       authBtn.innerText = 'กำลังประมวลผล...';
 
       try {
@@ -298,9 +293,8 @@
       } catch (error) {
         console.error(error);
         alert('❌ เกิดข้อผิดพลาด: ' + error.message);
-      } finally {
         authBtn.disabled = false;
-        authBtn.innerText = isRegisterMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
+        authBtn.innerText = originalText;
       }
     });
 
@@ -409,7 +403,4 @@
 
       const claimed = playerData.claimedQuests || [];
       document.getElementById('q1Btn').disabled = claimed.includes(1) || q1 < 5;
-      document.getElementById('q2Btn').disabled = claimed.includes(2) || q2 < 3;
-    }
-
-    document.getElemen
+      document.getElementById('q2Btn').disabled = claimed.includes(2) 
