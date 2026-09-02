@@ -406,4 +406,219 @@
       document.getElementById('q2Btn').disabled = claimed.includes(2) || q2 < 3;
     }
 
-    d
+    document.getElementById('q1Btn').addEventListener('click', () => claimQuest(1, 3));
+    document.getElementById('q2Btn').addEventListener('click', () => claimQuest(2, 5));
+
+    async function claimQuest(qId, spinReward) {
+      if (!playerData.claimedQuests) playerData.claimedQuests = [];
+      playerData.spins += spinReward;
+      playerData.claimedQuests.push(qId);
+      await saveDataOnline();
+      showGameContent();
+      alert('🎉 รับรางวัลภารกิจเรียบร้อย!');
+    }
+
+    document.getElementById('redeemBtn').addEventListener('click', async () => {
+      const code = document.getElementById('redeemCodeInput').value.trim().toLowerCase();
+      const codeData = promoCodes[code];
+      if (!codeData) return alert('❌ โค้ดไม่ถูกต้อง');
+
+      if (!playerData.usedCodes) playerData.usedCodes = [];
+      if (playerData.usedCodes.includes(code)) return alert('⚠️ คุณเคยใช้โค้ดนี้แล้ว');
+
+      if (!playerData.unlockedCards.includes(codeData.cardId)) playerData.unlockedCards.push(codeData.cardId);
+      playerData.usedCodes.push(code);
+
+      await saveDataOnline();
+      alert(`🎉 ได้รับการ์ดลิมิเต็ด: ${codeData.rewardName}`);
+      document.getElementById('redeemCodeInput').value = '';
+      initCollection();
+      updateTradeCardSelect();
+    });
+
+    function initCollection() {
+      const grid = document.getElementById('collectionGrid');
+      grid.innerHTML = '';
+      document.getElementById('totalCount').innerText = cards.length;
+      const unlocked = playerData.unlockedCards || [];
+
+      cards.forEach(c => {
+        const isUnlocked = unlocked.includes(c.id);
+        const item = document.createElement('div');
+        item.className = `collection-item ${isUnlocked ? 'unlocked' : ''}`;
+        item.innerHTML = `<img src="${c.image}"><div style="font-size:0.75rem; font-weight:bold; margin-top:4px;">${c.title}</div>`;
+        if (isUnlocked) item.addEventListener('click', () => openModal(c));
+        grid.appendChild(item);
+      });
+      document.getElementById('collectedCount').innerText = unlocked.length;
+    }
+
+    function openModal(c) {
+      document.getElementById('modalRarity').innerText = c.rarity;
+      document.getElementById('modalImage').src = c.image;
+      document.getElementById('modalTitle').innerText = c.title;
+      document.getElementById('modalDesc').innerText = c.desc;
+      document.getElementById('cardModal').classList.add('active');
+    }
+    document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('cardModal').classList.remove('active'));
+
+    document.getElementById('tabCards').addEventListener('click', () => switchLeaderboard('cards'));
+    document.getElementById('tabSpins').addEventListener('click', () => switchLeaderboard('spins'));
+
+    function switchLeaderboard(type) {
+      currentLeaderboardTab = type;
+      document.getElementById('tabCards').classList.toggle('active', type === 'cards');
+      document.getElementById('tabSpins').classList.toggle('active', type === 'spins');
+      renderLeaderboard();
+    }
+
+    function listenForLeaderboard() {
+      db.ref('users').on('value', (snapshot) => {
+        if (snapshot.exists()) { allUsersCache = snapshot.val(); renderLeaderboard(); }
+      });
+    }
+
+    function renderLeaderboard() {
+      const listEl = document.getElementById('leaderboardList');
+      listEl.innerHTML = '';
+      let arr = [];
+      for (let uid in allUsersCache) {
+        const u = allUsersCache[uid];
+        arr.push({
+          name: u.username || (u.email ? u.email.split('@')[0] : 'User'),
+          cards: u.unlockedCards ? u.unlockedCards.length : 0,
+          spins: u.spins || 0
+        });
+      }
+      arr.sort((a,b) => currentLeaderboardTab === 'cards' ? b.cards - a.cards : b.spins - a.spins);
+
+      arr.slice(0, 10).forEach((u, idx) => {
+        const li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        li.innerHTML = `<span>#${idx+1} ${u.name}</span><span style="color:#f1c40f; font-weight:bold;">${currentLeaderboardTab === 'cards' ? u.cards + ' ใบ' : u.spins + ' สปิน'}</span>`;
+        listEl.appendChild(li);
+      });
+    }
+
+    function updateTradeCardSelect() {
+      const select = document.getElementById('myTradeCardSelect');
+      select.innerHTML = '<option value="">-- เลือกการ์ดที่จะเสนอ --</option>';
+      (playerData.unlockedCards || []).forEach(id => {
+        const c = cards.find(item => item.id === id);
+        if (c) select.innerHTML += `<option value="${c.id}">${c.title} (${c.rarity})</option>`;
+      });
+    }
+
+    document.getElementById('startTradeBtn').addEventListener('click', async () => {
+      const target = document.getElementById('targetPlayerInput').value.trim();
+      if (!target || target === username) return alert('กรอกชื่อเพื่อนให้ถูกต้อง');
+
+      const snapshot = await db.ref(`usernames/${target}`).once('value');
+      if (!snapshot.exists()) return alert('ไม่พบผู้เล่นนี้');
+
+      currentTradeId = [username, target].sort().join('_trade_');
+      await db.ref(`trades/${currentTradeId}`).set({
+        p1: username, p2: target, p1_uid: currentUser.uid, p2_uid: snapshot.val().uid,
+        p1_card: null, p2_card: null, p1_confirm: false, p2_confirm: false, status: 'active'
+      });
+      openTradeUI(target);
+    });
+
+    function listenForTradeRequests() {
+      db.ref('trades').on('value', (snapshot) => {
+        if (!snapshot.exists() || currentTradeId) return;
+        const trades = snapshot.val();
+        for (let id in trades)ปล่อยเบลอ
+        for (let id in trades) {
+          const t = trades[id];
+          if ((t.p1 === username || t.p2 === username) && t.status === 'active') {
+            const partner = t.p1 === username ? t.p2 : t.p1;
+            if (confirm(`ผู้เล่น ${partner} ชวนคุณเทรดการ์ด ยืนยันเข้าร่วมหรือไม่?`)) {
+              currentTradeId = id;
+              openTradeUI(partner);
+            }
+            break;
+          }
+        }
+      });
+    }
+
+    function openTradeUI(partner) {
+      document.getElementById('tradeInit').style.display = 'none';
+      document.getElementById('tradeRoom').style.display = 'block';
+      document.getElementById('partnerName').innerText = partner;
+
+      db.ref(`trades/${currentTradeId}`).on('value', async (snap) => {
+        if (!snap.exists()) { resetTradeUI(); return; }
+        const data = snap.val();
+        const isP1 = username === data.p1;
+        const partnerCard = isP1 ? data.p2_card : data.p1_card;
+        const partnerConfirm = isP1 ? data.p2_confirm : data.p1_confirm;
+
+        if (partnerCard) {
+          const c = cards.find(item => item.id == partnerCard);
+          document.getElementById('partnerOfferCard').innerText = `${c.title} (${c.rarity})`;
+        } else {
+          document.getElementById('partnerOfferCard').innerText = 'ยังไม่เลือกการ์ด';
+        }
+        document.getElementById('partnerOfferStatus').innerText = partnerConfirm ? '✅ ยืนยันแล้ว' : '⏳ รอเลือก';
+
+        if (data.p1_confirm && data.p2_confirm && data.status === 'active') {
+          await executeSwap(data);
+        }
+      });
+    }
+
+    document.getElementById('myTradeCardSelect').addEventListener('change', async (e) => {
+      if (!currentTradeId) return;
+      const val = e.target.value;
+      const snap = await db.ref(`trades/${currentTradeId}`).once('value');
+      if (!snap.exists()) return;
+      const data = snap.val();
+      if (username === data.p1) { data.p1_card = val ? parseInt(val) : null; data.p1_confirm = false; }
+      else { data.p2_card = val ? parseInt(val) : null; data.p2_confirm = false; }
+      await db.ref(`trades/${currentTradeId}`).set(data);
+    });
+
+    document.getElementById('confirmTradeBtn').addEventListener('click', async () => {
+      const cardId = document.getElementById('myTradeCardSelect').value;
+      if (!cardId) return alert('เลือกการ์ดก่อนยืนยัน');
+      const snap = await db.ref(`trades/${currentTradeId}`).once('value');
+      if (!snap.exists()) return;
+      const data = snap.val();
+      if (username === data.p1) data.p1_confirm = true;
+      else data.p2_confirm = true;
+      await db.ref(`trades/${currentTradeId}`).set(data);
+    });
+
+    document.getElementById('cancelTradeBtn').addEventListener('click', async () => {
+      if (currentTradeId) await db.ref(`trades/${currentTradeId}`).remove();
+      resetTradeUI();
+    });
+
+    async function executeSwap(tData) {
+      tData.status = 'completed';
+      await db.ref(`trades/${currentTradeId}`).set(tData);
+
+      const isP1 = username === tData.p1;
+      const giveId = isP1 ? tData.p1_card : tData.p2_card;
+      const getId = isP1 ? tData.p2_card : tData.p1_card;
+
+      playerData.unlockedCards = playerData.unlockedCards.filter(id => id !== giveId);
+      if (!playerData.unlockedCards.includes(getId)) playerData.unlockedCards.push(getId);
+
+      await saveDataOnline();
+      alert('🎉 แลกเปลี่ยนการ์ดสำเร็จ!');
+      await db.ref(`trades/${currentTradeId}`).remove();
+      resetTradeUI();
+      initCollection();
+    }
+
+    function resetTradeUI() {
+      currentTradeId = null;
+      document.getElementById('tradeInit').style.display = 'block';
+      document.getElementById('tradeRoom').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
