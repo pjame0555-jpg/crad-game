@@ -57,6 +57,12 @@
     .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; }
     .card-back img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; }
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; }
+    /* สีพิเศษสำหรับป้าย UL */
+    .rarity-badge.ul { background: linear-gradient(135deg, #f1c40f, #e67e22, #e74c3c); color: #fff; animation: glow 1.5s infinite alternate; }
+    @keyframes glow {
+      from { box-shadow: 0 0 5px #f1c40f; }
+      to { box-shadow: 0 0 15px #e74c3c; }
+    }
     button {
       background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none;
       padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 25px;
@@ -221,17 +227,17 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
-    // รายการการ์ดทั้งหมด (รวม Reiko Kashima แล้ว)
+    // รายการการ์ดทั้งหมด (Reiko Kashima เปลี่ยนเป็นระดับ UL แล้ว)
     const cards = [
       { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'images/ryoma.png' },
       { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg' },
-      { id: 3, title: 'Reiko Kashima', rarity: 'UR', desc: 'ภูตผีสาวจากตำนานเมือง', image: 'images/dandadan1.png' }
+      { id: 3, title: 'Reiko Kashima', rarity: 'UL', desc: 'ภูตผีสาวระดับตำนานเมืองสุดหายาก', image: 'images/dandadan1.png' }
     ];
 
-    // พูลสำหรับสุ่มกาชา (ปีศาจขุมนรก 50%, Reiko Kashima 50%)
+    // พูลสำหรับสุ่มกาชา (ปีศาจขุมนรก 99.99%, Reiko Kashima ระดับ UL โอกาส 0.01%)
     const gachaPool = [
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg', rate: 50 },
-      { id: 3, title: 'Reiko Kashima', rarity: 'UR', desc: 'ภูตผีสาวจากตำนานเมือง', image: 'images/dandadan1.png', rate: 50 }
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg', rate: 99.99 },
+      { id: 3, title: 'Reiko Kashima', rarity: 'UL', desc: 'ภูตผีสาวระดับตำนานเมืองสุดหายาก', image: 'images/dandadan1.png', rate: 0.01 }
     ];
 
     const promoCodes = { 'snk': { cardId: 1, rewardName: 'Ryoma (SNK)' } };
@@ -348,7 +354,7 @@
       playerData.drawCount = (playerData.drawCount || 0) + 1;
       playerData.pity = (playerData.pity || 0) + 1;
 
-      // สุ่มการ์ดตามเรตใน gachaPool
+      // สุ่มการ์ดตามเรตเปอร์เซ็นต์
       let rand = Math.random() * 100;
       let cumulative = 0;
       let cardObj = gachaPool[0];
@@ -364,7 +370,14 @@
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
       updatePityDisplay();
 
-      document.getElementById('cardRarity').innerText = cardObj.rarity;
+      const rarityBadgeEl = document.getElementById('cardRarity');
+      rarityBadgeEl.innerText = cardObj.rarity;
+      if (cardObj.rarity === 'UL') {
+        rarityBadgeEl.className = 'rarity-badge ul';
+      } else {
+        rarityBadgeEl.className = 'rarity-badge';
+      }
+
       document.getElementById('cardImage').src = cardObj.image;
       document.getElementById('cardTitle').innerText = cardObj.title;
       document.getElementById('cardDesc').innerText = cardObj.desc;
@@ -381,7 +394,7 @@
 
     function updateQuestUI() {
       const q1 = Math.min(playerData.drawCount || 0, 5);
-      const q2 = Math.min((playerData.unlockedCards || []).length, 3); // ปรับเควสเป็นเก็บสะสมครบ 3 ใบ
+      const q2 = Math.min((playerData.unlockedCards || []).length, 3);
       document.getElementById('q1Prog').innerText = q1;
       document.getElementById('q2Prog').innerText = q2;
 
@@ -438,7 +451,14 @@
     }
 
     function openModal(c) {
-      document.getElementById('modalRarity').innerText = c.rarity;
+      const modalRarityEl = document.getElementById('modalRarity');
+      modalRarityEl.innerText = c.rarity;
+      if (c.rarity === 'UL') {
+        modalRarityEl.className = 'rarity-badge ul';
+      } else {
+        modalRarityEl.className = 'rarity-badge';
+      }
+
       document.getElementById('modalImage').src = c.image;
       document.getElementById('modalTitle').innerText = c.title;
       document.getElementById('modalDesc').innerText = c.desc;
@@ -597,7 +617,7 @@
       initCollection();
     }
 
-    function resetTradeUI() {
+    function resetTradeId() {
       currentTradeId = null;
       document.getElementById('tradeInit').style.display = 'block';
       document.getElementById('tradeRoom').style.display = 'none';
