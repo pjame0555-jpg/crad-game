@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition + Battle</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition + PvE/PvP</title>
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -102,7 +102,7 @@
       <div class="code-badge">โค้ด: snk</div>
     </div>
 
-    <h1>🎴 เกมสุ่มการ์ด & ลานประลอง Battle</h1>
+    <h1>🎴 เกมสุ่มการ์ด & ลานประลอง Battle Edition</h1>
 
     <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
@@ -110,7 +110,6 @@
       <div>
         <input type="email" id="emailInput" placeholder="อีเมลของคุณ" required><br>
         <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" required><br>
-        
         <button type="button" id="authBtn">เข้าสู่ระบบ</button><br>
         <span class="toggle-link" id="toggleAuth">ยังไม่มีบัญชี? สมัครสมาชิกที่นี่</span>
       </div>
@@ -146,11 +145,39 @@
 
       <button id="drawBtn">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
 
-      <!-- PvE BATTLE SYSTEM -->
+      <!-- PvE BATTLE SYSTEM (UPGRADED) -->
       <div class="battle-box" style="border: 2px dashed #e74c3c;">
-        <h3>⚔️ ลานประลอง PvE (สู้กับบอสรับสปิน)</h3>
-        <p style="font-size: 0.9rem; color: #ddd;">ส่งการ์ดของคุณไปพิชิตบอสรับรางวัลเพิ่ม!</p>
-        <select id="pveCardSelect"></select><br>
+        <h3>⚔️ ลานประลอง PvE (เลือกความยากสู้กับบอส)</h3>
+        <p style="font-size: 0.9rem; color: #ddd;">เลือกการ์ดของคุณ เลือกระดับความยาก แล้วสู้กับบอสเพื่อรับสปินเพิ่ม!</p>
+        
+        <div style="margin-bottom: 10px;">
+          <label>🎴 เลือกการ์ดลงสู้: </label><br>
+          <select id="pveCardSelect"></select>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label>⚙️ เลือกระดับความยาก: </label><br>
+          <select id="pveDifficultySelect">
+            <option value="easy">🟢 Easy (ง่าย - บอสอ่อน)</option>
+            <option value="normal" selected>🟡 Normal (ปานกลาง)</option>
+            <option value="hard">🟠 Hard (ยาก)</option>
+            <option value="extreme">🔴 Extreme (โคตรยาก)</option>
+            <option value="nightmare">💀 Nightmare (นรกแตก - โหดสุดๆ)</option>
+          </select>
+        </div>
+
+        <!-- พรีวิวบอส -->
+        <div id="bossPreviewBox" style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; margin-bottom: 12px; display: none;">
+          <p style="margin: 0 0 5px 0; color: #f1c40f; font-weight: bold;">🎯 บอสประจำรอบนี้:</p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <img id="bossPreviewImg" src="" style="width: 50px; height: 60px; object-fit: cover; border-radius: 6px; border: 2px solid #fff;">
+            <div style="text-align: left;">
+              <div id="bossPreviewName" style="font-weight: bold;">-</div>
+              <div id="bossPreviewStats" style="font-size: 0.85rem; color: #e74c3c;">ATK: 0 | HP: 0</div>
+            </div>
+          </div>
+        </div>
+
         <button class="btn-green" id="startPveBtn">⚔️ เริ่มสู้กับบอส</button>
         <div id="pveResult" style="margin-top: 10px; font-weight: bold; font-size: 0.95rem;"></div>
       </div>
@@ -159,7 +186,7 @@
       <div class="battle-box" style="border: 2px dashed #3498db;">
         <h3>🛡️ ลานประลอง PvP (ท้าดวลกับผู้เล่นอื่น)</h3>
         <div id="pvpInit">
-          <input type="text" id="targetPvpInput" placeholder="พิมพ์ชื่อเพื่อนที่จะท้าดวล @ ..."><br>
+          <input type="text" id="targetPvpInput" placeholder="พิมพ์ชื่อเพื่อนที่จะท้าดวล ..."><br>
           <button class="btn-blue" id="startPvpBtn">⚔️ สร้างห้องท้าดวล PvP</button>
         </div>
         <div id="pvpRoom" style="display: none;">
@@ -175,7 +202,7 @@
               <p id="pvpPartnerStatus">สถานะ: รอเลือก</p>
             </div>
           </div>
-          <button id="confirmPvpBtn" class="btn-green">✅ ลุยเลย (ตัดสินผล)</button>
+          <button id="confirmPvpBtn" class="btn-green">✅ ยืนยันสู้</button>
           <button id="cancelPvpBtn">❌ ยกเลิก</button>
           <div id="pvpResult" style="margin-top: 10px; font-weight: bold;"></div>
         </div>
@@ -215,7 +242,7 @@
       <div class="trade-box">
         <h3>🔄 ระบบแลกเปลี่ยนการ์ด (Trade System)</h3>
         <div id="tradeInit">
-          <input type="text" id="targetPlayerInput" placeholder="พิมพ์ชื่อผู้เล่นเพื่อนก่อน @ ...">
+          <input type="text" id="targetPlayerInput" placeholder="พิมพ์ชื่อเพื่อนที่จะเทรด...">
           <button class="btn-green" id="startTradeBtn">สร้างห้องเทรด</button>
         </div>
 
@@ -274,19 +301,28 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
-    // กำหนดพลังตามสเกลที่คุณต้องการ (ปีศาจขุมนรก < SNK < Reiko)
+    // กำหนดพลังตามสเกล: ปีศาจขุมนรกกากสุด < SNK กลาง < Reiko เก่งสุด
     const cards = [
       { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', atk: 80, hp: 200, desc: 'ซามูไรพเนจรระดับกลาง', image: 'images/ryoma.png' },
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', atk: 35, hp: 90, desc: 'สิ่งมีชีวิตจากความมืดมิด (อ่อนที่สุด)', image: 'images/demon.jpeg' },
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', atk: 35, hp: 90, desc: 'สิ่งมีชีวิตจากความมืดมิด (กากสุด)', image: 'images/demon.jpeg' },
       { id: 3, title: 'Reiko Kashima', rarity: 'UL', atk: 180, hp: 450, desc: 'ภูตผีสาวแกร่งที่สุดในเกม', image: 'images/dandadan1.png' }
     ];
 
     const gachaPool = [
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', atk: 35, hp: 90, desc: 'สิ่งมีชีวิตจากความมืดมิด (อ่อนที่สุด)', image: 'images/demon.jpeg', rate: 99.99 },
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', atk: 35, hp: 90, desc: 'สิ่งมีชีวิตจากความมืดมิด (กากสุด)', image: 'images/demon.jpeg', rate: 99.99 },
       { id: 3, title: 'Reiko Kashima', rarity: 'UL', atk: 180, hp: 450, desc: 'ภูตผีสาวแกร่งที่สุดในเกม', image: 'images/dandadan1.png', rate: 0.01 }
     ];
 
     const promoCodes = { 'snk': { cardId: 1, rewardName: 'Ryoma (SNK)' } };
+
+    // ตัวคูณบอสตามระดับความยาก
+    const difficultyMultipliers = {
+      easy: { mult: 0.6, reward: 1, name: 'Easy' },
+      normal: { mult: 1.0, reward: 2, name: 'Normal' },
+      hard: { mult: 1.5, reward: 4, name: 'Hard' },
+      extreme: { mult: 2.2, reward: 7, name: 'Extreme' },
+      nightmare: { mult: 3.5, reward: 12, name: 'Nightmare 💀' }
+    };
 
     let isRegisterMode = false;
     let currentUser = null;
@@ -296,6 +332,7 @@
     let currentPvpId = null;
     let currentLeaderboardTab = 'cards';
     let allUsersCache = {};
+    let currentBoss = null;
 
     const authTitle = document.getElementById('authTitle');
     const authBtn = document.getElementById('authBtn');
@@ -385,6 +422,7 @@
       initCollection();
       updateTradeCardSelect();
       updateBattleSelects();
+      generateBoss();
     }
 
     function updatePityDisplay() {
@@ -528,7 +566,7 @@
       }
     });
 
-    // --- PVE BATTLE ---
+    // --- PVE BATTLE (DIFFICULTY & BOSS GENERATOR) ---
     function updateBattleSelects() {
       const pveSelect = document.getElementById('pveCardSelect');
       const pvpSelect = document.getElementById('myPvpCardSelect');
@@ -544,29 +582,51 @@
       });
     }
 
+    function generateBoss() {
+      const diffKey = document.getElementById('pveDifficultySelect').value;
+      const diffConfig = difficultyMultipliers[diffKey];
+      const randomCard = cards[Math.floor(Math.random() * cards.length)];
+      
+      currentBoss = {
+        title: `[${diffConfig.name}] ${randomCard.title}`,
+        atk: Math.round(randomCard.atk * diffConfig.mult),
+        hp: Math.round(randomCard.hp * diffConfig.mult),
+        image: randomCard.image,
+        reward: diffConfig.reward
+      };
+
+      document.getElementById('bossPreviewBox').style.display = 'block';
+      document.getElementById('bossPreviewImg').src = currentBoss.image;
+      document.getElementById('bossPreviewName').innerText = currentBoss.title;
+      document.getElementById('bossPreviewStats').innerText = `ATK: ${currentBoss.atk} | HP: ${currentBoss.hp} (รางวัล: +${currentBoss.reward} สปิน)`;
+    }
+
+    document.getElementById('pveDifficultySelect').addEventListener('change', generateBoss);
+
     document.getElementById('startPveBtn').addEventListener('click', async () => {
       const cardId = document.getElementById('pveCardSelect').value;
-      if (!cardId) return alert('❌ กรุณาเลือกการ์ดก่อนเข้าประลอง!');
+      if (!cardId) return alert('❌ กรุณาเลือกการ์ดของคุณก่อนเข้าประลอง!');
+
+      if (!currentBoss) generateBoss();
 
       const myCard = cards.find(item => item.id == cardId);
-      const boss = { title: 'มังกรทมิฬ', atk: 75, hp: 250 }; // บอสกลางๆ
       const resultEl = document.getElementById('pveResult');
 
-      // คำนวณผลต่อสู้จากพลัง ATK และ HP
       let playerPower = (myCard.atk * 1.5) + (myCard.hp * 0.5);
-      let bossPower = (boss.atk * 1.5) + (boss.hp * 0.5);
+      let bossPower = (currentBoss.atk * 1.5) + (currentBoss.hp * 0.5);
 
       if (playerPower >= bossPower) {
         resultEl.style.color = '#2ecc71';
-        resultEl.innerHTML = `🎉 ชนะบอสสำเร็จ! ใช้ ${myCard.title} เอาชนะมังกรทมิฬได้! รับ +3 สปิน`;
-        playerData.spins += 3;
+        resultEl.innerHTML = `🎉 ชนะบอสสำเร็จ! ใช้ ${myCard.title} พิชิต ${currentBoss.title} ได้รับ +${currentBoss.reward} สปิน!`;
+        playerData.spins += currentBoss.reward;
       } else {
         resultEl.style.color = '#e74c3c';
-        resultEl.innerHTML = `💀 แพ้บอส! การ์ด ${myCard.title} พลังยังไม่พอ (ปีศาจขุมนรกสู้ไม่ไหว ลองหา Reiko หรือ Ryoma มาสู้ใหม่)`;
+        resultEl.innerHTML = `💀 แพ้บอส! พลังการ์ด ${myCard.title} ยังไม่พอสู้กับ ${currentBoss.title} (ลองเปลี่ยนระดับความยากให้ง่ายลง หรือใช้การ์ดที่แรร์กว่าเดิม)`;
       }
 
       await saveDataOnline();
       document.getElementById('spinsDisplay').innerText = playerData.spins;
+      generateBoss();
     });
 
     // --- PVP BATTLE (REALTIME) ---
@@ -698,7 +758,7 @@
       document.getElementById('pvpResult').innerHTML = '';
     }
 
-    // Leaderboard & Trade setup
+    // --- LEADERBOARD & TRADE ---
     document.getElementById('tabCards').addEventListener('click', () => switchLeaderboard('cards'));
     document.getElementById('tabSpins').addEventListener('click', () => switchLeaderboard('spins'));
 
