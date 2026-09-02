@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ด Ultimate Edition + ระบบเติมเงิน TrueMoney</title>
+  <title>เกมสุ่มการ์ด Ultimate Edition</title>
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -29,7 +29,7 @@
       font-weight: bold; font-size: 1.2rem; padding: 4px 15px;
       border-radius: 8px; margin-top: 5px; border: 2px dashed #d63031;
     }
-    .auth-box, .trade-box, .topup-box, .redeem-box, .collection-section, .leaderboard-box, .quest-box, .battle-box {
+    .auth-box, .trade-box, .redeem-box, .collection-section, .leaderboard-box, .quest-box, .battle-box {
       background: rgba(255, 255, 255, 0.08); padding: 25px; border-radius: 18px;
       backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15);
       margin-top: 25px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -73,7 +73,6 @@
     .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
     .btn-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
     .btn-blue { background: linear-gradient(135deg, #3498db, #2980b9); }
-    .btn-orange { background: linear-gradient(135deg, #ff7675, #fab1a0); color: #2d3436; }
     .btn-sm { padding: 6px 14px; font-size: 0.85rem; border-radius: 15px; }
     .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; font-size: 0.95rem; display: inline-block; margin-top: 10px; }
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; margin-top: 15px; }
@@ -149,17 +148,6 @@
       </div>
 
       <button id="drawBtn">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
-
-      <!-- TRUEMONEY TOPUP SYSTEM -->
-      <div class="topup-box" style="border: 2px dashed #ff7675;">
-        <h3>🟠 เติมเงิน TrueMoney Wallet / ซองอังเปา</h3>
-        <p style="font-size: 0.85rem; color: #ddd; margin-bottom: 10px;">
-          อัตราการเติม: <strong>10 บาท = 15 สปิน</strong>, <strong>50 บาท = 90 สปิน</strong>, <strong>100 บาท = 200 สปิน</strong>
-        </p>
-        <input type="text" id="truemoneyLinkInput" placeholder="วางลิงก์ซองอังเปา TrueMoney (gift.truemoney.com/...)" style="width: 85%;"><br>
-        <button class="btn-orange" id="topupBtn">📥 ยืนยันการเติมเงิน TrueMoney</button>
-        <div id="topupResult" style="margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></div>
-      </div>
 
       <!-- PVE TURN-BASED BATTLE SYSTEM -->
       <div class="battle-box" style="border: 2px dashed #e74c3c;">
@@ -385,7 +373,7 @@
     let isRegisterMode = false;
     let currentUser = null;
     let username = '';
-    let playerData = { unlockedCards: [], usedCodes: [], topupHistory: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
+    let playerData = { unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
     let currentLeaderboardTab = 'cards';
     let allUsersCache = {};
     let currentBoss = null;
@@ -442,9 +430,9 @@
         try {
           const snapshot = await db.ref(`users/${user.uid}`).once('value');
           if (snapshot.exists()) {
-            playerData = Object.assign({ unlockedCards: [], usedCodes: [], topupHistory: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] }, snapshot.val());
+            playerData = Object.assign({ unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] }, snapshot.val());
           } else {
-            playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], topupHistory: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
+            playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
             await saveDataOnline();
           }
           await db.ref(`usernames/${username}`).set({ uid: user.uid, email: user.email });
@@ -491,42 +479,6 @@
       document.getElementById('pityCount').innerText = rem;
       document.getElementById('pityBar').style.width = `${((playerData.pity % 5) / 5) * 100}%`;
     }
-
-    // --- TRUEMONEY TOPUP SIMULATION ---
-    document.getElementById('topupBtn').addEventListener('click', async () => {
-      const link = document.getElementById('truemoneyLinkInput').value.trim();
-      const resEl = document.getElementById('topupResult');
-      
-      if (!link.includes('gift.truemoney.com')) {
-        resEl.style.color = '#e74c3c';
-        resEl.innerText = '❌ ลิงก์ซองอังเปา TrueMoney ไม่ถูกต้อง';
-        return;
-      }
-
-      // จำลองการตรวจสอบซองอังเปา (ในระบบจริงต้องเชื่อมต่อ API ซองอังเปา หรือระบบหลังบ้าน)
-      resEl.style.color = '#f1c40f';
-      resEl.innerText = '⏳ กำลังตรวจสอบซองอังเปา TrueMoney...';
-
-      setTimeout(async () => {
-        // จำลองเรทสุ่มจำนวนเงินจากซอง (เช่น 10 บาท, 50 บาท, หรือ 100 บาท)
-        const mockAmounts = [10, 50, 100];
-        const randomAmount = mockAmounts[Math.floor(Math.random() * mockAmounts.length)];
-        let rewardSpins = 15;
-        if (randomAmount === 50) rewardSpins = 90;
-        if (randomAmount === 100) rewardSpins = 200;
-
-        playerData.spins += rewardSpins;
-        if (!playerData.topupHistory) playerData.topupHistory = [];
-        playerData.topupHistory.push({ date: new Date().toISOString(), amount: randomAmount, spins: rewardSpins });
-
-        await saveDataOnline();
-        document.getElementById('spinsDisplay').innerText = playerData.spins;
-        document.getElementById('truemoneyLinkInput').value = '';
-
-        resEl.style.color = '#2ecc71';
-        resEl.innerText = `🎉 เติมเงินสำเร็จ! มูลค่า ${randomAmount} บาท ได้รับ +${rewardSpins} สปิน`;
-      }, 1500);
-    });
 
     drawBtn.addEventListener('click', async () => {
       if (playerData.spins <= 0) return alert('❌ สปินหมดแล้ว!');
