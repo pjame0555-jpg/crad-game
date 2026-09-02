@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Full System)</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Fixed Auth)</title>
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
@@ -278,7 +278,7 @@
     const toggleAuth = document.getElementById('toggleAuth');
     const drawBtn = document.getElementById('drawBtn');
 
-    // Auth Switch
+    // Auth Switch Mode
     toggleAuth.addEventListener('click', () => {
       isRegisterMode = !isRegisterMode;
       authTitle.innerText = isRegisterMode ? '📝 สมัครสมาชิก' : '🔑 เข้าสู่ระบบ';
@@ -286,13 +286,15 @@
       toggleAuth.innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
     });
 
-    // Submit Login/Register
+    // FIXED: Form Submission for Register vs Login
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
 
       authBtn.disabled = true;
+      authBtn.innerText = 'กำลังประมวลผล...';
+
       try {
         if (isRegisterMode) {
           await createUserWithEmailAndPassword(auth, email, password);
@@ -301,30 +303,36 @@
           await signInWithEmailAndPassword(auth, email, password);
         }
       } catch (error) {
+        console.error(error);
         alert('เกิดข้อผิดพลาด: ' + error.message);
       } finally {
         authBtn.disabled = false;
+        authBtn.innerText = isRegisterMode ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ';
       }
     });
 
-    // State Observer
+    // Auth State Listener
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
         username = user.email ? user.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : 'user_' + user.uid.substring(0, 5);
         
-        const snapshot = await get(child(ref(db), `users/${user.uid}`));
-        if (snapshot.exists()) {
-          playerData = Object.assign({ unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] }, snapshot.val());
-        } else {
-          playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
-        }
-        await saveDataOnline();
-        await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
+        try {
+          const snapshot = await get(child(ref(db), `users/${user.uid}`));
+          if (snapshot.exists()) {
+            playerData = Object.assign({ unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] }, snapshot.val());
+          } else {
+            playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
+          }
+          await saveDataOnline();
+          await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
 
-        showGameContent();
-        listenForTradeRequests();
-        listenForLeaderboard();
+          showGameContent();
+          listenForTradeRequests();
+          listenForLeaderboard();
+        } catch(err) {
+          console.error(err);
+        }
       } else {
         currentUser = null;
         document.getElementById('authBox').style.display = 'block';
@@ -400,10 +408,4 @@
     // Quests
     function updateQuestUI() {
       const q1 = Math.min(playerData.drawCount || 0, 5);
-      const q2 = Math.min((playerData.unlockedCards || []).length, 3);
-      document.getElementById('q1Prog').innerText = q1;
-      document.getElementById('q2Prog').innerText = q2;
-
-      const claimed = playerData.claimedQuests || [];
-      document.getElementById('q1Btn').disabled = claimed.includes(1) || q1 < 5;
-      document.getElem
+      const q2 = Math.min((playerData.unlockedCards || []
