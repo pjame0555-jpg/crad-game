@@ -101,8 +101,8 @@
     <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
-      <div id="authForm">
-        <input type="email" id="emailInput" placeholder="อีเมล (เช่น user@game.com)" required><br>
+      <div>
+        <input type="email" id="emailInput" placeholder="อีเมลของคุณ" required><br>
         <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" required><br>
         
         <button type="button" id="authBtn">เข้าสู่ระบบ</button><br>
@@ -269,7 +269,7 @@
       toggleAuth.innerText = isRegisterMode ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สมัครสมาชิกที่นี่';
     });
 
-    // ปุ่มกดดำเนินการ
+    // ปุ่มกดล็อกอิน / สมัคร
     authBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
@@ -403,4 +403,7 @@
 
       const claimed = playerData.claimedQuests || [];
       document.getElementById('q1Btn').disabled = claimed.includes(1) || q1 < 5;
-      document.getElementById('q2Btn').disabled = claimed.includes(2) 
+      document.getElementById('q2Btn').disabled = claimed.includes(2) || q2 < 3;
+    }
+
+    d
