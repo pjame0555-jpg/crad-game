@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Fixed Auth & Debug)</title>
+  <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition (Auth Persistence Fixed)</title>
   <style>
     * { box-sizing: border-box; user-select: none; }
     body {
@@ -115,7 +115,7 @@
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
       <form id="authForm">
         <input type="email" id="emailInput" placeholder="อีเมล (เช่น user@game.com)" required><br>
-        <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอัศร)" required><br>
+        <input type="password" id="passwordInput" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" required><br>
         
         <button type="submit" id="authBtn">เข้าสู่ระบบ</button><br>
         <span class="toggle-link" id="toggleAuth">ยังไม่มีบัญชี? สมัครสมาชิกที่นี่</span>
@@ -228,7 +228,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, set, get, child, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -244,6 +244,9 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
+
+    // FIX 1: Set explicit Auth Persistence
+    setPersistence(auth, browserLocalPersistence).catch(console.error);
 
     const cards = [
       { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'https://via.placeholder.com/200x300/e74c3c/ffffff?text=Ryoma+UR' },
@@ -302,21 +305,18 @@
         console.error(error);
         switch (error.code) {
           case 'auth/unauthorized-domain':
-            alert('❌ โดเมนนี้ยังไม่ได้รับอนุญาต! ให้ไปเพิ่ม localhost หรือ domain ของคุณใน Firebase Console > Authentication > Settings > Authorized domains');
+            alert('❌ โดเมนนี้ยังไม่ได้รับอนุญาต! ให้ไปเพิ่ม localhost หรือ IP ของคุณใน Firebase Console');
             break;
           case 'auth/user-not-found':
           case 'auth/wrong-password':
           case 'auth/invalid-credential':
-            alert('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง (หากยังไม่มีบัญชีให้กด "สมัครสมาชิกที่นี่")');
+            alert('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง (หากยังไม่มีบัญชีให้กดสลับไปที่ "สมัครสมาชิกที่นี่")');
             break;
           case 'auth/email-already-in-use':
             alert('❌ อีเมลนี้ถูกใช้งานแล้ว กรุณากดสลับไปที่ "เข้าสู่ระบบ"');
             break;
           case 'auth/weak-password':
             alert('❌ รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
-            break;
-          case 'auth/invalid-email':
-            alert('❌ รูปแบบอีเมลไม่ถูกต้อง');
             break;
           default:
             alert('❌ เกิดข้อผิดพลาด: ' + error.message);
@@ -327,6 +327,7 @@
       }
     });
 
+    // FIX 2: Correct Auth State Transition
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
@@ -338,16 +339,17 @@
             playerData = Object.assign({ unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] }, snapshot.val());
           } else {
             playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, pity: 0, claimedQuests: [] };
+            await saveDataOnline();
           }
-          await saveDataOnline();
+          
           await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
 
           showGameContent();
           listenForTradeRequests();
           listenForLeaderboard();
         } catch(err) {
-          console.error(err);
-          alert('❌ ไม่อ่าน/เขียนข้อมูลใน Database ได้ ให้ไปเช็กที่ Firebase Realtime Database Rules');
+          console.error("Database error:", err);
+          showGameContent(); // Force show UI even on offline/rules error
         }
       } else {
         currentUser = null;
@@ -356,7 +358,12 @@
       }
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth).then(() => {
+        document.getElementById('authBox').style.display = 'block';
+        document.getElementById('gameContent').style.display = 'none';
+      });
+    });
 
     async function saveDataOnline() {
       if (currentUser) await set(ref(db, 'users/' + currentUser.uid), playerData);
@@ -396,10 +403,4 @@
         let cumulative = 0;
         for (let c of gachaPool) {
           cumulative += c.rate;
-          if (rand <= cumulative) { cardObj = c; break; }
-        }
-        if (!cardObj) cardObj = gachaPool[gachaPool.length - 1];
-      }
-
-      document.getElementById('spinsDisplay').innerText = playerData.spins;
-      document.getElementById('drawCountDisplay').innerText = playerData.d
+          if (rand <= cumulative) { cardObj = c; bre
