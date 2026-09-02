@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>เกมสุ่มการ์ดวัดดวง Ultimate Edition</title>
 
+  <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -97,6 +98,7 @@
 
     <h1>🎴 เกมสุ่มการ์ดออนไลน์</h1>
 
+    <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
       <h2 id="authTitle">🔑 เข้าสู่ระบบ</h2>
       <div>
@@ -108,6 +110,7 @@
       </div>
     </div>
 
+    <!-- MAIN GAME CONTENT -->
     <div id="gameContent" style="display: none;">
       <div class="player-bar">
         <div>👤 ผู้เล่น: <strong id="playerDisplay">-</strong></div>
@@ -121,6 +124,7 @@
         </div>
       </div>
 
+      <!-- CARD ARENA -->
       <div class="card" id="card">
         <div class="card-inner" id="cardInner">
           <div class="card-front"><span style="font-size: 4rem;">❓</span><p>แตะเพื่อสุ่ม</p></div>
@@ -135,6 +139,7 @@
 
       <button id="drawBtn">🎲 สุ่มการ์ด (ใช้ 1 สปิน)</button>
 
+      <!-- QUEST SYSTEM -->
       <div class="quest-box">
         <h3>📜 ภารกิจประจำวัน (Daily Quests)</h3>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -147,12 +152,14 @@
         </div>
       </div>
 
+      <!-- REDEEM SYSTEM -->
       <div class="redeem-box">
         <h3>🎁 กรอกโค้ดรับรางวัล (Redeem Code)</h3>
         <input type="text" id="redeemCodeInput" placeholder="กรอกโค้ดที่นี่..."><br>
         <button class="btn-purple" id="redeemBtn">รับรางวัล</button>
       </div>
 
+      <!-- LEADERBOARD SYSTEM -->
       <div class="leaderboard-box">
         <h3>🏆 อันดับผู้เล่นสูงสุด (Leaderboard)</h3>
         <div class="leaderboard-tabs">
@@ -162,6 +169,7 @@
         <ul class="leaderboard-list" id="leaderboardList"></ul>
       </div>
 
+      <!-- TRADE SYSTEM -->
       <div class="trade-box">
         <h3>🔄 ระบบแลกเปลี่ยนการ์ด (Trade System)</h3>
         <div id="tradeInit">
@@ -187,6 +195,7 @@
         </div>
       </div>
 
+      <!-- COLLECTION SECTION -->
       <div class="collection-section">
         <h3>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h3>
         <div class="collection-grid" id="collectionGrid"></div>
@@ -194,6 +203,7 @@
     </div>
   </div>
 
+  <!-- MODAL -->
   <div class="modal-overlay" id="cardModal">
     <div class="modal-content">
       <span class="close-btn" id="closeModalBtn">&times;</span>
@@ -221,14 +231,14 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
-    // มีเฉพาะการ์ด 2 ใบตามที่ต้องการ (อ้างอิงไฟล์รูปภาพในโฟลเดอร์เดียวกัน)
+    // ดึงรูปภาพจากโฟลเดอร์ images/ ตามที่คุณแจ้ง
     const cards = [
-      { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'ryoma.png' },
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'demon.jpg' }
+      { id: 1, title: 'Ryoma (SNK)', rarity: 'UR', desc: 'ซามูไรพเนจรสุดแกร่ง', image: 'images/ryoma.png' },
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg' }
     ];
 
     const gachaPool = [
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'demon.jpg', rate: 100 }
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', desc: 'สิ่งมีชีวิตจากความมืดมิด', image: 'images/demon.jpeg', rate: 100 }
     ];
 
     const promoCodes = { 'snk': { cardId: 1, rewardName: 'Ryoma (SNK)' } };
@@ -345,7 +355,7 @@
       playerData.drawCount = (playerData.drawCount || 0) + 1;
       playerData.pity = (playerData.pity || 0) + 1;
 
-      let cardObj = gachaPool[0]; // ออกการ์ดปีศาจจากขุมนรก (demon.jpg)
+      let cardObj = gachaPool[0]; // ออกการ์ดปีศาจจากขุมนรก (images/demon.jpeg)
 
       document.getElementById('spinsDisplay').innerText = playerData.spins;
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
@@ -584,7 +594,7 @@
       initCollection();
     }
 
-    function resetTradeUI() {
+    function resetTradeId() {
       currentTradeId = null;
       document.getElementById('tradeInit').style.display = 'block';
       document.getElementById('tradeRoom').style.display = 'none';
