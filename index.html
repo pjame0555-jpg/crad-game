@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ด Ultimate Edition + ระบบเทิร์นแบทเทิล</title>
+  <title>เกมสุ่มการ์ด Ultimate Edition + PvP/PvE เทิร์นแบทเทิล</title>
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -100,7 +100,7 @@
       <div class="code-badge">โค้ด: snk</div>
     </div>
 
-    <h1>🎴 เกมสุ่มการ์ด & ลานประลอง Turn-Based Battle</h1>
+    <h1>🎴 เกมสุ่มการ์ด & ลานประลอง Turn-Based Ultimate</h1>
 
     <!-- AUTHENTICATION FORM -->
     <div class="auth-box" id="authBox">
@@ -135,7 +135,7 @@
             <span class="rarity-badge" id="cardRarity">N</span>
             <img id="cardImage" src="" alt="Card">
             <h3 id="cardTitle" style="margin: 10px 0 2px 0;">ชื่อการ์ด</h3>
-            <p id="cardStatsText" style="font-size: 0.8rem; font-weight: bold; color: #e74c3c, margin: 0;">ATK: 0 | HP: 0</p>
+            <p id="cardStatsText" style="font-size: 0.8rem; font-weight: bold; color: #e74c3c; margin: 0;">ATK: 0 | HP: 0</p>
             <p id="cardDesc" style="font-size: 0.75rem; color: #555; margin: 4px 0 0 0;">รายละเอียด</p>
           </div>
         </div>
@@ -145,8 +145,8 @@
 
       <!-- PVE TURN-BASED BATTLE SYSTEM -->
       <div class="battle-box" style="border: 2px dashed #e74c3c;">
-        <h3>⚔️ ลานประลอง PvE (สู้เป็นเทิร์นจนกว่าการ์ดจะหมดมือ)</h3>
-        <p style="font-size: 0.9rem; color: #ddd;">เลือกระดับความยากของบอส และเลือกการ์ดลงประลองแบบเรียลไทม์ทีละเทิร์น</p>
+        <h3>⚔️ ลานประลอง PvE (สู้เป็นเทิร์นจนกว่าการ์ดหมดมือ)</h3>
+        <p style="font-size: 0.9rem; color: #ddd;">เลือกระดับความยากของบอส และลุยเคลียร์เด็ค</p>
         
         <div style="margin-bottom: 10px;">
           <label>⚙️ เลือกระดับความยากบอส: </label><br>
@@ -172,10 +172,10 @@
         </div>
 
         <div id="pveSetupArea">
-          <button class="btn-green" id="startPveMatchBtn">🎮 เริ่มเปิดศึกเคลียร์เด็ค (ลุยจนกว่าการ์ดหมดมือ)</button>
+          <button class="btn-green" id="startPveMatchBtn">🎮 เริ่มเปิดศึก PvE (สู้จนการ์ดหมดมือ)</button>
         </div>
 
-        <!-- หน้าต่างต่อสู้แบบเทิร์น -->
+        <!-- หน้าต่างต่อสู้แบบเทิร์น PvE -->
         <div id="pveBattleArena" style="display: none; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; margin-top: 15px;">
           <h4 id="turnIndicator" style="color: #f1c40f; margin-top: 0;">เทิร์นที่: 1</h4>
           <div style="display: flex; justify-content: space-around; align-items: center; gap: 10px;">
@@ -200,6 +200,45 @@
         </div>
 
         <div id="pveResult" style="margin-top: 10px; font-weight: bold; font-size: 0.95rem;"></div>
+      </div>
+
+      <!-- PVP BATTLE SYSTEM (REALTIME TURN-BASED) -->
+      <div class="battle-box" style="border: 2px dashed #3498db;">
+        <h3>🛡️ ลานประลอง PvP (ดวลเด็ค Realtime จนกว่าฝ่ายใดฝ่ายหนึ่งการ์ดหมดมือ)</h3>
+        <div id="pvpInit">
+          <input type="text" id="targetPvpInput" placeholder="พิมพ์ชื่อผู้เล่นอื่นที่จะท้าดวล ..."><br>
+          <button class="btn-blue" id="startPvpBtn">⚔️ สร้างห้องท้าดวล PvP</button>
+        </div>
+        <div id="pvpRoom" style="display: none;">
+          <p>คู่ดวล: <strong id="pvpPartnerName">-</strong></p>
+          <div id="pvpStatusInfo" style="font-weight: bold; color: #f1c40f; margin-bottom: 10px;">สถานะ: กำลังรอการเชื่อมต่อ</div>
+          <button id="cancelPvpBtn" class="btn-sm">❌ ยกเลิก / ออกจากห้อง</button>
+          <div id="pvpGameArea" style="display: none; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; margin-top: 15px;">
+            <h4 id="pvpTurnIndicator" style="color: #f1c40f; margin-top: 0;">ตาของคุณ</h4>
+            <div style="display: flex; justify-content: space-around; align-items: center; gap: 10px;">
+              <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; width: 45%;">
+                <h5 style="margin:0 0 5px 0;" id="pvpMyCardName">การ์ดของคุณ</h5>
+                <p style="margin: 2px 0; font-size: 0.85rem;" id="pvpMyHp">HP: 0 / 0</p>
+                <p style="margin: 2px 0; font-size: 0.85rem;" id="pvpMyAtk">ATK: 0</p>
+                <p style="margin: 2px 0; font-size: 0.8rem; color: #aaa;" id="pvpMyDeckCount">การ์ดเหลือในเด็ค: 0 ใบ</p>
+              </div>
+              <div style="font-weight: bold; color: #e74c3c;">VS</div>
+              <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; width: 45%;">
+                <h5 style="margin:0 0 5px 0;" id="pvpEnemyCardName">การ์ดฝ่ายตรงข้าม</h5>
+                <p style="margin: 2px 0; font-size: 0.85rem;" id="pvpEnemyHp">HP: 0 / 0</p>
+                <p style="margin: 2px 0; font-size: 0.85rem;" id="pvpEnemyAtk">ATK: 0</p>
+                <p style="margin: 2px 0; font-size: 0.8rem; color: #aaa;" id="pvpEnemyDeckCount">การ์ดเหลือในเด็ค: 0 ใบ</p>
+              </div>
+            </div>
+
+            <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-blue btn-sm" id="pvpAttackBtn">⚔️ โจมตีปกติ</button>
+              <button class="btn-purple btn-sm" id="pvpSkillBtn" style="display: none;">✨ ใช้สกิลพิเศษ</button>
+            </div>
+            <div id="pvpLog" style="margin-top: 12px; font-size: 0.85rem; max-height: 120px; overflow-y: auto; text-align: left; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 6px;"></div>
+          </div>
+          <div id="pvpResult" style="margin-top: 10px; font-weight: bold;"></div>
+        </div>
       </div>
 
       <!-- QUEST SYSTEM -->
@@ -269,7 +308,6 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
-    // กำหนดการ์ดพร้อมความสามารถพิเศษ (Skills & Passives)
     const cards = [
       { 
         id: 1, 
@@ -298,7 +336,7 @@
         rarity: 'UL', 
         atk: 110, 
         hp: 300, 
-        desc: 'ภูตผีสุดแกร่ง [Passive: เกิดใหม่ 1 ครั้ง | Skill: กระจกมรณะ ดาเมจ 120]', 
+        desc: 'ภูตผีสุดแกร่ง [Passive: เกิดใหม่ 1 ครั้ง | Skill: กระจกมรณะ โจมตีทุกใบในเด็คศัตรู 120]', 
         image: 'images/dandadan1.png',
         skillName: 'กระจกมรณะ',
         hasSkill: true
@@ -327,21 +365,15 @@
     let currentLeaderboardTab = 'cards';
     let allUsersCache = {};
     let currentBoss = null;
+    let currentPvpId = null;
 
-    // ตัวแปรควบคุมการต่อสู้ PvE แบบเทิร์น
+    // PvE Battle State
     let battleState = {
       activeCardsQueue: [],
       currentCardIndex: 0,
-      myCurrentHp: 0,
-      myMaxHp: 0,
-      myAtk: 0,
-      bossCurrentHp: 0,
-      bossMaxHp: 0,
-      bossAtk: 0,
-      turnCount: 1,
-      myBleedTurns: 0,
-      bossBleedTurns: 0,
-      reikoRevived: false
+      myCurrentHp: 0, myMaxHp: 0, myAtk: 0,
+      bossCurrentHp: 0, bossMaxHp: 0, bossAtk: 0,
+      turnCount: 1, bossBleedTurns: 0, reikoRevived: false
     };
 
     const authTitle = document.getElementById('authTitle');
@@ -359,7 +391,7 @@
     authBtn.addEventListener('click', async () => {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
-      if (!email || !password) return alert('❌ กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน');
+      if (!email || !password) return alert('❌ กรุณากรอกอีเมลและรหัสผ่าน');
 
       authBtn.disabled = true;
       try {
@@ -393,6 +425,7 @@
 
           showGameContent();
           listenForLeaderboard();
+          listenForPvpRequests();
         } catch(err) {
           console.error("Database error:", err);
         }
@@ -543,7 +576,7 @@
       document.getElementById('cardModal').classList.remove('active');
     });
 
-    // --- PVE BATTLE (TURN-BASED & DECK CONTINUOUS) ---
+    // --- PVE BATTLE ---
     function generateBoss() {
       const diffKey = document.getElementById('pveDifficultySelect').value;
       const diffConfig = difficultyMultipliers[diffKey];
@@ -568,38 +601,33 @@
 
     document.getElementById('startPveMatchBtn').addEventListener('click', () => {
       const unlocked = playerData.unlockedCards || [];
-      if (unlocked.length === 0) return alert('❌ คุณยังไม่มีการ์ดในครอบครอง! กรุณาสุ่มการ์ดหรือใส่โค้ดก่อน');
+      if (unlocked.length === 0) return alert('❌ คุณยังไม่มีการ์ด! กรุณาสุ่มหรือใส่โค้ดก่อน');
 
-      // นำการ์ดทั้งหมดที่ผู้เล่นปลดล็อกแล้วมาเรียงเป็นเด็คสู้จนกว่าจะหมดมือ
       battleState.activeCardsQueue = unlocked.map(id => {
         const c = cards.find(item => item.id === id);
-        return { ...c }; // Clone object เพื่อใช้เก็บ HP แยกแต่ละใบ
+        return { ...c };
       });
 
       battleState.currentCardIndex = 0;
       battleState.turnCount = 1;
       battleState.reikoRevived = false;
-
-      // เซ็ตค่าบอสปัจจุบัน
       battleState.bossCurrentHp = currentBoss.hp;
       battleState.bossMaxHp = currentBoss.hp;
       battleState.bossAtk = currentBoss.atk;
 
-      loadNextCardToBattle();
-
+      loadNextPveCard();
       document.getElementById('pveSetupArea').style.display = 'none';
       document.getElementById('bossPreviewBox').style.display = 'none';
       document.getElementById('pveBattleArena').style.display = 'block';
       document.getElementById('pveResult').innerHTML = '';
-      document.getElementById('pveLog').innerHTML = '<div>⚔️ เริ่มต้นการประลองลุยเด็ค!</div>';
+      document.getElementById('pveLog').innerHTML = '<div>⚔️ เริ่มต้นประลอง PvE!</div>';
     });
 
-    function loadNextCardToBattle() {
+    function loadNextPveCard() {
       if (battleState.currentCardIndex >= battleState.activeCardsQueue.length) {
-        endPveBattle(false, 'การ์ดในมือคุณหมดเกลี้ยงแล้ว พ่ายแพ้ต่อบอส!');
+        endPveBattle(false, 'การ์ดในเด็คหมดเกลี้ยง พ่ายแพ้ต่อบอส!');
         return;
       }
-
       const activeCard = battleState.activeCardsQueue[battleState.currentCardIndex];
       battleState.myCurrentHp = activeCard.hp;
       battleState.myMaxHp = activeCard.hp;
@@ -607,9 +635,8 @@
       battleState.currentCardObj = activeCard;
 
       document.getElementById('battleMyCardName').innerText = `${activeCard.title} (${activeCard.rarity})`;
-      updateBattleUI();
+      updatePveUI();
 
-      // เช็คปุ่มสกิล
       const skillBtn = document.getElementById('pveSkillBtn');
       if (activeCard.hasSkill) {
         skillBtn.style.display = 'inline-block';
@@ -619,7 +646,7 @@
       }
     }
 
-    function updateBattleUI() {
+    function updatePveUI() {
       document.getElementById('turnIndicator').innerText = `เทิร์นที่: ${battleState.turnCount} (การ์ดใบที่ ${battleState.currentCardIndex + 1}/${battleState.activeCardsQueue.length})`;
       document.getElementById('battleMyHp').innerText = `HP: ${battleState.myCurrentHp} / ${battleState.myMaxHp}`;
       document.getElementById('battleMyAtk').innerText = `ATK: ${battleState.myAtk}`;
@@ -627,122 +654,363 @@
       document.getElementById('battleBossAtk').innerText = `ATK: ${battleState.bossAtk}`;
     }
 
-    function logBattle(msg) {
+    function logPve(msg) {
       const logEl = document.getElementById('pveLog');
       logEl.innerHTML += `<div>${msg}</div>`;
       logEl.scrollTop = logEl.scrollHeight;
     }
 
-    // ปุ่มโจมตีปกติ
-    document.getElementById('pveAttackBtn').addEventListener('click', () => executePlayerTurn('attack'));
-    // ปุ่มใช้สกิล
-    document.getElementById('pveSkillBtn').addEventListener('click', () => executePlayerTurn('skill'));
+    document.getElementById('pveAttackBtn').addEventListener('click', () => executePveTurn('attack'));
+    document.getElementById('pveSkillBtn').addEventListener('click', () => executePveTurn('skill'));
 
-    function executePlayerTurn(actionType) {
-      let damageDealt = 0;
+    function executePveTurn(actionType) {
+      let dmg = 0;
       const card = battleState.currentCardObj;
 
       if (actionType === 'attack') {
-        damageDealt = battleState.myAtk;
-        logBattle(`👉 คุณใช้ ${card.title} โจมตีปกติ สร้างดาเมจ ${damageDealt} หน่วย`);
+        dmg = battleState.myAtk;
+        logPve(`👉 ใช้ ${card.title} โจมตีปกติ สร้างดาเมจ ${dmg}`);
       } else if (actionType === 'skill') {
-        if (card.id === 1) { // SNK Skill: ยิกๆ
-          damageDealt = 50;
-          logBattle(`✨ คุณใช้สกิล [ยิกๆ] ของ Ryoma สร้างดาเมจ 50 หน่วย และทำให้บอสติดสถานะเลือดไหล!`);
-          battleState.bossBleedTurns = 3; // ติดเลือดไหล 3 เทิร์น
-        } else if (card.id === 3) { // Reiko Skill: กระจกมรณะ
-          damageDealt = 120;
-          logBattle(`✨ คุณใช้สกิล [กระจกมรณะ] ของ Reiko พลังสะท้อนมหาศาล! สร้างดาเมจ 120 หน่วย`);
+        if (card.id === 1) { // SNK: ยิกๆ
+          dmg = 50;
+          logPve(`✨ ใช้สกิล [ยิกๆ] ดาเมจ 50 บอสติดเลือดไหล 3 เทิร์น`);
+          battleState.bossBleedTurns = 3;
+        } else if (card.id === 3) { // Reiko: กระจกมรณะ (PvE ตีตัวเดี่ยวบอสแรงสะใจ 120)
+          dmg = 120;
+          logPve(`✨ ใช้สกิล [กระจกมรณะ] ดาเมจหนักหน่วง 120`);
         }
       }
 
-      battleState.bossCurrentHp = Math.max(0, battleState.bossCurrentHp - damageDealt);
-      logBattle(`🎯 โจมตีโดนบอส! HP บอสเหลือ: <strong style="color:#e74c3c;">${battleState.bossCurrentHp} / ${battleState.bossMaxHp}</strong>`);
+      battleState.bossCurrentHp = Math.max(0, battleState.bossCurrentHp - dmg);
+      logPve(`🎯 ดาเมจโดนบอส! HP บอสเหลือ: <strong style="color:#e74c3c;">${battleState.bossCurrentHp} / ${battleState.bossMaxHp}</strong>`);
 
-      // เช็คว่าบอสตาวยัง
       if (battleState.bossCurrentHp <= 0) {
-        handleBossDefeated();
+        handlePveBossWin();
         return;
       }
-
-      // เข้าสู่เทิร์นบอสโจมตีสวนกลับ
-      executeBossTurn();
+      executePveBossCounter();
     }
 
-    function executeBossTurn() {
-      // เอฟเฟกต์สถานะผิดปกติ (เลือดไหลของ SNK)
+    function executePveBossCounter() {
       if (battleState.bossBleedTurns > 0) {
-        const bleedDmg = Math.round(battleState.bossMaxHp * 0.1);
-        battleState.bossCurrentHp = Math.max(0, battleState.bossCurrentHp - bleedDmg);
+        const bleed = Math.round(battleState.bossMaxHp * 0.1);
+        battleState.bossCurrentHp = Math.max(0, battleState.bossCurrentHp - bleed);
         battleState.bossBleedTurns--;
-        logBattle(`🩸 บอสติดสถานะเลือดไหล เสีย HP ไป ${bleedDmg} หน่วย! HP บอสเหลือ: <strong style="color:#e74c3c;">${battleState.bossCurrentHp}</strong>`);
+        logPve(`🩸 บอสเสียเลือดไหล ${bleed} HP เหลือ: <strong style="color:#e74c3c;">${battleState.bossCurrentHp}</strong>`);
         if (battleState.bossCurrentHp <= 0) {
-          handleBossDefeated();
+          handlePveBossWin();
           return;
         }
       }
 
-      // บอสโจมตีผู้เล่น
       const bossDmg = battleState.bossAtk;
       battleState.myCurrentHp = Math.max(0, battleState.myCurrentHp - bossDmg);
-      logBattle(`💀 บอสสวนกลับ! สร้างดาเมจ ${bossDmg} หน่วย | HP การ์ดคุณเหลือ: <strong style="color:#3498db;">${battleState.myCurrentHp} / ${battleState.myMaxHp}</strong>`);
+      logPve(`💀 บอสสวนกลับ ${bossDmg} ดาเมจ | HP การ์ดคุณเหลือ: <strong style="color:#3498db;">${battleState.myCurrentHp} / ${battleState.myMaxHp}</strong>`);
 
-      updateBattleUI();
+      updatePveUI();
 
-      // เช็คว่าการ์ดผู้เล่นตายหรือยัง
       if (battleState.myCurrentHp <= 0) {
-        handlePlayerCardDefeated();
+        handlePveCardDeath();
       } else {
         battleState.turnCount++;
-        updateBattleUI();
+        updatePveUI();
       }
     }
 
-    function handlePlayerCardDefeated() {
+    function handlePveCardDeath() {
       const card = battleState.currentCardObj;
-
-      // เช็ค Passive ของ Reiko Kashima (เกิดใหม่ได้ 1 รอบ)
       if (card.id === 3 && !battleState.reikoRevived) {
         battleState.reikoRevived = true;
-        battleState.myCurrentHp = Math.round(battleState.myMaxHp * 0.5); // ฟื้น 50% HP
-        logBattle(`✨ [Passive เกิดใหม่] Reiko Kashima ฟื้นคืนชีพขึ้นมาด้วย HP ${battleState.myCurrentHp}!`);
-        updateBattleUI();
+        battleState.myCurrentHp = Math.round(battleState.myMaxHp * 0.5);
+        logPve(`✨ [Passive เกิดใหม่] Reiko ฟื้นคืนชีพด้วย HP 50%!`);
+        updatePveUI();
         return;
       }
-
-      // เช็ค Passive ของปีศาจขุมนรก (เมื่อถูกสังหาร จะทำให้ศัตรูเสีย HP 50% ทันทีไม่มีข้อยกเว้น)
       if (card.id === 2) {
-        const instantDmg = Math.round(battleState.bossMaxHp * 0.5);
-        battleState.bossCurrentHp = Math.max(0, battleState.bossCurrentHp - instantDmg);
-        logBattle(`🔥 [Passive ระเบิดพลีชีพ] ปีศาจขุมนรกตายแต่ลากบอสเสีย HP ทันที 50% (${instantDmg} หน่วย)! HP บอสเหลือ: <strong style="color:#e74c3c;">${battleState.bossCurrentHp}</strong>`);
+        const ins = Math.round(battleState.bossMaxHp * 0.5);
+        battleState.bossCurrentHp = Math.max(0, battleState.bossCurrentHp - ins);
+        logPve(`🔥 [Passive ระเบิดพลีชีพ] ปีศาจขุมนรกตายลากบอสเสีย 50% HP (${ins})! บอสเหลือ: <strong style="color:#e74c3c;">${battleState.bossCurrentHp}</strong>`);
         if (battleState.bossCurrentHp <= 0) {
-          handleBossDefeated();
+          handlePveBossWin();
           return;
         }
       }
 
-      logBattle(`❌ การ์ด ${card.title} ของคุณพ่ายแพ้และหมดสภาพต่อสู้!`);
+      logPve(`❌ การ์ด ${card.title} พ่ายแพ้!`);
       battleState.currentCardIndex++;
-      setTimeout(loadNextCardToBattle, 1500);
+      setTimeout(loadNextPveCard, 1500);
     }
 
-    async function handleBossDefeated() {
-      logBattle(`🎉 ยอดเยี่ยม! คุณกำจัดบอส ${currentBoss.title} สำเร็จแล้ว!`);
-      endPveBattle(true, `🎉 ชนะบอสสำเร็จ! ได้รับ +${currentBoss.reward} สปิน!`);
+    async function handlePveBossWin() {
+      logPve(`🎉 ชนะบอสสำเร็จ!`);
+      endPveBattle(true, `🎉 ชนะบอส! ได้รับ +${currentBoss.reward} สปิน!`);
       playerData.spins += currentBoss.reward;
       await saveDataOnline();
       document.getElementById('spinsDisplay').innerText = playerData.spins;
     }
 
-    function endPveBattle(isWin, message) {
+    function endPveBattle(isWin, msg) {
       document.getElementById('pveBattleArena').style.display = 'none';
       document.getElementById('pveSetupArea').style.display = 'block';
       document.getElementById('bossPreviewBox').style.display = 'block';
-      
-      const resEl = document.getElementById('pveResult');
-      resEl.style.color = isWin ? '#2ecc71' : '#e74c3c';
-      resEl.innerHTML = message;
+      const res = document.getElementById('pveResult');
+      res.style.color = isWin ? '#2ecc71' : '#e74c3c';
+      res.innerHTML = msg;
       generateBoss();
+    }
+
+    // --- PVP REALTIME SYSTEM ---
+    document.getElementById('startPvpBtn').addEventListener('click', async () => {
+      const target = document.getElementById('targetPvpInput').value.trim();
+      if (!target || target === username) return alert('❌ กรุณากรอกชื่อผู้เล่นอื่นให้ถูกต้อง');
+
+      const snap = await db.ref(`usernames/${target}`).once('value');
+      if (!snap.exists()) return alert('❌ ไม่พบผู้เล่นนี้ในระบบ');
+
+      const unlocked = playerData.unlockedCards || [];
+      if (unlocked.length === 0) return alert('❌ คุณยังไม่มีการ์ดสำหรับดวล!');
+
+      currentPvpId = [username, target].sort().join('_pvp_');
+      
+      const myDeck = unlocked.map(id => {
+        const c = cards.find(item => item.id === id);
+        return { ...c, currentHp: c.hp };
+      });
+
+      await db.ref(`pvp/${currentPvpId}`).set({
+        p1: username, p2: target,
+        p1_deck: myDeck, p2_deck: null,
+        p1_idx: 0, p2_idx: 0,
+        turn: username,
+        status: 'waiting',
+        p1_bleed: 0, p2_bleed: 0,
+        p1_revived: false, p2_revived: false,
+        log: 'กำลังรอคู่ต่อสู้ตอบรับ...'
+      });
+      openPvpUI(target, 'รอคู่ต่อสู้เข้าสู่ห้อง...');
+    });
+
+    function listenForPvpRequests() {
+      db.ref('pvp').on('value', async (snapshot) => {
+        if (!snapshot.exists() || currentPvpId) return;
+        const rooms = snapshot.val();
+        for (let id in rooms) {
+          const room = rooms[id];
+          if (room.p2 === username && room.status === 'waiting') {
+            const unlocked = playerData.unlockedCards || [];
+            if (unlocked.length === 0) continue;
+            
+            if (confirm(`🛡️ ผู้เล่น ${room.p1} ท้าดวล PvP กับคุณ ยืนยันเข้าร่วมหรือไม่?`)) {
+              currentPvpId = id;
+              const myDeck = unlocked.map(i => {
+                const c = cards.find(item => item.id === i);
+                return { ...c, currentHp: c.hp };
+              });
+              room.p2_deck = myDeck;
+              room.status = 'playing';
+              room.log = `เริ่มการดวลระหว่าง ${room.p1} และ ${room.p2}! ตาของ ${room.turn}`;
+              await db.ref(`pvp/${id}`).set(room);
+              openPvpUI(room.p1, 'เริ่มการดวล!');
+            }
+            break;
+          }
+        }
+      });
+    }
+
+    function openPvpUI(partnerName, statusText) {
+      document.getElementById('pvpInit').style.display = 'none';
+      document.getElementById('pvpRoom').style.display = 'block';
+      document.getElementById('pvpPartnerName').innerText = partnerName;
+      document.getElementById('pvpStatusInfo').innerText = statusText;
+
+      db.ref(`pvp/${currentPvpId}`).on('value', (snap) => {
+        if (!snap.exists()) { resetPvpUI(); return; }
+        const data = snap.val();
+        
+        if (data.status === 'playing') {
+          document.getElementById('pvpStatusInfo').style.display = 'none';
+          document.getElementById('pvpGameArea').style.display = 'block';
+          updatePvpBoardUI(data);
+        } else if (data.status === 'completed') {
+          document.getElementById('pvpResult').innerHTML = data.log;
+          setTimeout(() => {
+            db.ref(`pvp/${currentPvpId}`).remove();
+            resetPvpUI();
+          }, 6000);
+        }
+      });
+    }
+
+    function updatePvpBoardUI(data) {
+      const isP1 = username === data.p1;
+      const myDeck = isP1 ? data.p1_deck : data.p2_deck;
+      const enemyDeck = isP1 ? data.p2_deck : data.p1_deck;
+      const myIdx = isP1 ? data.p1_idx : data.p2_idx;
+      const enemyIdx = isP1 ? data.p2_idx : data.p1_idx;
+
+      const myCard = myDeck[myIdx];
+      const enemyCard = enemyDeck[enemyIdx];
+
+      document.getElementById('pvpMyCardName').innerText = `${myCard.title} (${myCard.rarity})`;
+      document.getElementById('pvpMyHp').innerText = `HP: ${myCard.currentHp} / ${myCard.hp}`;
+      document.getElementById('pvpMyAtk').innerText = `ATK: ${myCard.atk}`;
+      document.getElementById('pvpMyDeckCount').innerText = `การ์ดเหลือ: ${myDeck.length - myIdx} ใบ`;
+
+      document.getElementById('pvpEnemyCardName').innerText = `${enemyCard.title} (${enemyCard.rarity})`;
+      document.getElementById('pvpEnemyHp').innerText = `HP: ${enemyCard.currentHp} / ${enemyCard.hp}`;
+      document.getElementById('pvpEnemyAtk').innerText = `ATK: ${enemyCard.atk}`;
+      document.getElementById('pvpEnemyDeckCount').innerText = `การ์ดเหลือ: ${enemyDeck.length - enemyIdx} ใบ`;
+
+      const isMyTurn = data.turn === username;
+      document.getElementById('pvpTurnIndicator').innerText = isMyTurn ? '🟢 ตาของคุณ!' : `⏳ ตาของ ${data.turn}`;
+      document.getElementById('pvpAttackBtn').disabled = !isMyTurn;
+      
+      const skillBtn = document.getElementById('pvpSkillBtn');
+      if (myCard.hasSkill) {
+        skillBtn.style.display = 'inline-block';
+        skillBtn.innerText = `✨ ${myCard.skillName}`;
+        skillBtn.disabled = !isMyTurn;
+      } else {
+        skillBtn.style.display = 'none';
+      }
+
+      const logEl = document.getElementById('pvpLog');
+      logEl.innerHTML = `<div>${data.log}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    document.getElementById('pvpAttackBtn').addEventListener('click', () => sendPvpAction('attack'));
+    document.getElementById('pvpSkillBtn').addEventListener('click', () => sendPvpAction('skill'));
+
+    async function sendPvpAction(actionType) {
+      const snap = await db.ref(`pvp/${currentPvpId}`).once('value');
+      if (!snap.exists()) return;
+      let data = snap.val();
+      if (data.turn !== username) return;
+
+      const isP1 = username === data.p1;
+      let myDeck = isP1 ? data.p1_deck : data.p2_deck;
+      let enemyDeck = isP1 ? data.p2_deck : data.p1_deck;
+      let myIdx = isP1 ? data.p1_idx : data.p2_idx;
+      let enemyIdx = isP1 ? data.p2_idx : data.p1_idx;
+
+      let myCard = myDeck[myIdx];
+      let enemyCard = enemyDeck[enemyIdx];
+
+      let dmg = 0;
+      let logMsg = '';
+
+      // เช็คเลือดไหลตาก่อนหน้า
+      let bleedKey = isP1 ? 'p1_bleed' : 'p2_bleed';
+      if (data[bleedKey] > 0) {
+        let bDmg = Math.round(myCard.hp * 0.1);
+        myCard.currentHp = Math.max(0, myCard.currentHp - bDmg);
+        data[bleedKey]--;
+        logMsg += `[เลือดไหล] ${myCard.title} เสียเลือด ${bDmg} HP! `;
+      }
+
+      if (myCard.currentHp > 0) {
+        if (actionType === 'attack') {
+          dmg = myCard.atk;
+          enemyCard.currentHp = Math.max(0, enemyCard.currentHp - dmg);
+          logMsg += `${username} ใช้ ${myCard.title} โจมตี ${enemyCard.title} ได้รับ ${dmg} ดาเมจ (HP ศัตรูเหลือ ${enemyCard.currentHp})`;
+        } else if (actionType === 'skill') {
+          if (myCard.id === 1) { // SNK: ยิกๆ
+            dmg = 50;
+            enemyCard.currentHp = Math.max(0, enemyCard.currentHp - dmg);
+            let targetBleedKey = isP1 ? 'p2_bleed' : 'p1_bleed';
+            data[targetBleedKey] = 3;
+            logMsg += `${username} ใช้สกิล [ยิกๆ] ดาเมจ 50 ใส่ ${enemyCard.title} และทำให้ติดเลือดไหล!`;
+          } else if (myCard.id === 3) { // Reiko: กระจกมรณะ (โจมตีทุกการ์ดในมือของศัตรู)
+            dmg = 120;
+            // โจมตีการ์ดทุกใบที่เหลือในเด็คของศัตรู
+            for (let i = enemyIdx; i < enemyDeck.length; i++) {
+              enemyDeck[i].currentHp = Math.max(0, enemyDeck[i].currentHp - dmg);
+            }
+            logMsg += `${username} ใช้สกิล [กระจกมรณะ] ของ Reiko โจมตีการ์ดทุกใบในมือศัตรู เสียใบละ 120 ดาเมจ!`;
+          }
+        }
+      }
+
+      // เช็คตาย/Passive ฝ่ายตรงข้าม
+      if (enemyCard.currentHp <= 0) {
+        // Reiko Passive เกิดใหม่
+        let enemyRevivedKey = isP1 ? 'p2_revived' : 'p1_revived';
+        if (enemyCard.id === 3 && !data[enemyRevivedKey]) {
+          data[enemyRevivedKey] = true;
+          enemyCard.currentHp = Math.round(enemyCard.hp * 0.5);
+          logMsg += ` | ✨ Reiko ฝ่ายตรงข้ามฟื้นคืนชีพ 50% HP!`;
+        } else {
+          // ปีศาจขุมนรก Passive ตายลากศัตรูเสียบ 50% HP ทันทีไม่มีข้อยกเว้น
+          if (enemyCard.id === 2) {
+            let instantDmg = Math.round(myCard.hp * 0.5);
+            myCard.currentHp = Math.max(0, myCard.currentHp - instantDmg);
+            logMsg += ` | 🔥 ปีศาจขุมนรกตาย ลากการ์ดคุณเสีย 50% HP ทันที (${instantDmg})!`;
+          }
+          logMsg += ` | ❌ ${enemyCard.title} ของศัตรูพ่ายแพ้!`;
+          enemyIdx++;
+        }
+      }
+
+      // เช็คตัวเราตาย (กรณีโดนปีศาจขุมนรกสวน)
+      let myRevivedKey = isP1 ? 'p1_revived' : 'p2_revived';
+      if (myCard.currentHp <= 0) {
+        if (myCard.id === 3 && !data[myRevivedKey]) {
+          data[myRevivedKey] = true;
+          myCard.currentHp = Math.round(myCard.hp * 0.5);
+          logMsg += ` | ✨ Reiko ของคุณฟื้นคืนชีพ 50% HP!`;
+        } else {
+          logMsg += ` | ❌ การ์ด ${myCard.title} ของคุณพ่ายแพ้!`;
+          myIdx++;
+        }
+      }
+
+      // อัปเดตกลับเข้า DB
+      if (isP1) {
+        data.p1_deck = myDeck; data.p2_deck = enemyDeck;
+        data.p1_idx = myIdx; data.p2_idx = enemyIdx;
+      } else {
+        data.p2_deck = myDeck; data.p1_deck = enemyDeck;
+        data.p2_idx = myIdx; data.p1_idx = enemyIdx;
+      }
+
+      data.log = logMsg;
+
+      // เช็คจบเกมหรือยัง (การ์ดหมดเด็ค)
+      if (myIdx >= myDeck.length && enemyIdx >= enemyDeck.length) {
+        data.status = 'completed';
+        data.log = '🤝 เสมอกัน! การ์ดหมดมือพร้อมกัน';
+      } else if (myIdx >= myDeck.length) {
+        data.status = 'completed';
+        data.log = `💀 ผู้เล่น ${data.p2 === username ? data.p1 : data.p2} เป็นฝ่ายชนะเนื่องจากการ์ดคุณหมดมือ!`;
+        if (data.p2 === username) {
+          // แจกสปินถ้า p2 ชนะ หรือถ้า p1 ชนะจัดการฝั่งตัวเอง
+        }
+      } else if (enemyIdx >= enemyDeck.length) {
+        data.status = 'completed';
+        data.log = `🎉 ยอดเยี่ยม! ${username} เป็นฝ่ายชนะการดวลเด็ค PvP! (+2 สปิน)`;
+        playerData.spins += 2;
+        await saveDataOnline();
+        document.getElementById('spinsDisplay').innerText = playerData.spins;
+      } else {
+        data.turn = data.turn === data.p1 ? data.p2 : data.p1;
+      }
+
+      await db.ref(`pvp/${currentPvpId}`).set(data);
+    }
+
+    document.getElementById('cancelPvpBtn').addEventListener('click', async () => {
+      if (currentPvpId) await db.ref(`pvp/${currentPvpId}`).remove();
+      resetPvpUI();
+    });
+
+    function resetPvpUI() {
+      currentPvpId = null;
+      document.getElementById('pvpInit').style.display = 'block';
+      document.getElementById('pvpRoom').style.display = 'none';
+      document.getElementById('pvpGameArea').style.display = 'none';
+      document.getElementById('pvpResult').innerHTML = '';
     }
 
     // --- LEADERBOARD ---
