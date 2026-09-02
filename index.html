@@ -319,10 +319,13 @@
           if (snapshot.exists()) {
             playerData = snapshot.val();
             if (playerData.spins === undefined) playerData.spins = 10;
+            playerData.username = username;
+            playerData.email = user.email;
           } else {
             playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10 };
-            await saveDataOnline();
           }
+          
+          await saveDataOnline();
 
           if (username) {
             await set(ref(db, `usernames/${username}`), { uid: user.uid, email: user.email });
@@ -440,8 +443,18 @@
         const u = allUsersCache[uid];
         const cardCount = u.unlockedCards ? u.unlockedCards.length : 0;
         const spinCount = u.spins !== undefined ? u.spins : 10;
+        
+        let displayName = u.username;
+        if (!displayName || displayName === 'Unknown') {
+          if (u.email) {
+            displayName = u.email.split('@')[0];
+          } else {
+            displayName = 'Player_' + uid.substring(0, 5);
+          }
+        }
+
         userArray.push({
-          username: u.username || 'Unknown',
+          username: displayName,
           cardCount: cardCount,
           spinCount: spinCount
         });
@@ -449,267 +462,4 @@
 
       if (currentLeaderboardTab === 'cards') {
         userArray.sort((a, b) => b.cardCount - a.cardCount);
-      } else {
-        userArray.sort((a, b) => b.spinCount - a.spinCount);
-      }
-
-      const topUsers = userArray.slice(0, 10);
-
-      if (topUsers.length === 0) {
-        listEl.innerHTML = '<li style="text-align: center;">ยังไม่มีข้อมูลอันดับ</li>';
-        return;
-      }
-
-      topUsers.forEach((user, index) => {
-        const rank = index + 1;
-        let badge = `#${rank}`;
-        if (rank === 1) badge = '🥇';
-        else if (rank === 2) badge = '🥈';
-        else if (rank === 3) badge = '🥉';
-
-        const li = document.createElement('li');
-        li.className = 'leaderboard-item';
-        
-        const valueText = currentLeaderboardTab === 'cards' 
-          ? `🎴 ${user.cardCount} ใบ` 
-          : `⚡ ${user.spinCount} สปิน`;
-
-        li.innerHTML = `
-          <span><strong>${badge}</strong> ${user.username}</span>
-          <span style="color: #f1c40f; font-weight: bold;">${valueText}</span>
-        `;
-        listEl.appendChild(li);
-      });
-    }
-
-    window.openCardModal = function(card) {
-      document.getElementById('modalRarity').innerText = card.rarity;
-      document.getElementById('modalImage').src = card.image;
-      document.getElementById('modalTitle').innerText = card.title;
-      document.getElementById('modalDesc').innerText = card.desc;
-      document.getElementById('cardModal').classList.add('active');
-    };
-
-    window.closeCardModal = function(event) {
-      if (event.target.classList.contains('modal-overlay') || event.target.classList.contains('close-btn')) {
-        document.getElementById('cardModal').classList.remove('active');
-      }
-    };
-
-    function updateTradeCardSelect() {
-      const select = document.getElementById('myTradeCardSelect');
-      select.innerHTML = '<option value="">-- เลือกการ์ดที่จะเสนอ --</option>';
-      const unlockedList = playerData.unlockedCards || [];
-      
-      cards.forEach(card => {
-        if (unlockedList.includes(card.id)) {
-          select.innerHTML += `<option value="${card.id}">${card.title} (${card.rarity})</option>`;
-        }
-      });
-    }
-
-    window.startTrade = async function() {
-      const targetPlayer = document.getElementById('targetPlayerInput').value.trim();
-      if (!targetPlayer) return alert('กรุณากรอกชื่อผู้เล่นเพื่อนก่อนครับ');
-      if (targetPlayer === username) return alert('ไม่สามารถเทรดกับตัวเองได้');
-
-      try {
-        const snapshot = await get(child(ref(db), `usernames/${targetPlayer}`));
-        if (!snapshot.exists()) return alert('ไม่พบชื่อผู้เล่นนี้ในระบบ (ใช้ชื่อส่วนก่อนหน้าเครื่องหมาย @)');
-
-        currentTradeId = [username, targetPlayer].sort().join('_trade_');
-        
-        const tradeData = {
-          p1: username,
-          p2: targetPlayer,
-          p1_uid: currentUser.uid,
-          p2_uid: snapshot.val().uid,
-          p1_card: null,
-          p2_card: null,
-          p1_confirm: false,
-          p2_confirm: false,
-          status: 'active'
-        };
-
-        await set(ref(db, `trades/${currentTradeId}`), tradeData);
-        openTradeUI(targetPlayer);
-      } catch (e) {
-        alert('เกิดข้อผิดพลาดขณะเริ่มเทรด: ' + e.message);
-      }
-    };
-
-    function listenForTradeRequests() {
-      const tradesRef = ref(db, 'trades');
-      onValue(tradesRef, (snapshot) => {
-        if (!snapshot.exists() || currentTradeId) return;
-        const allTrades = snapshot.val();
-        for (let id in allTrades) {
-          const trade = allTrades[id];
-          if ((trade.p1 === username || trade.p2 === username) && trade.status === 'active') {
-            const partner = trade.p1 === username ? trade.p2 : trade.p1;
-            if (confirm(`ผู้เล่น ${partner} ชวนคุณเทรดการ์ด ต้องการเข้าร่วมหรือไม่?`)) {
-              currentTradeId = id;
-              openTradeUI(partner);
-            }
-            break;
-          }
-        }
-      }, (e) => console.error("Trade Listen Error:", e));
-    }
-
-    function openTradeUI(partnerName) {
-      document.getElementById('tradeInit').style.display = 'none';
-      document.getElementById('tradeRoom').style.display = 'block';
-      document.getElementById('partnerName').innerText = partnerName;
-      updateTradeCardSelect();
-
-      const tradeRef = ref(db, `trades/${currentTradeId}`);
-      onValue(tradeRef, async (snapshot) => {
-        if (!snapshot.exists()) {
-          alert('การเทรดถูกยกเลิกแล้ว');
-          resetTradeUI();
-          return;
-        }
-
-        const data = snapshot.val();
-        const isP1 = username === data.p1;
-        const partnerCard = isP1 ? data.p2_card : data.p1_card;
-        const partnerConfirm = isP1 ? data.p2_confirm : data.p1_confirm;
-
-        if (partnerCard) {
-          const cObj = cards.find(c => c.id == partnerCard);
-          document.getElementById('partnerOfferCard').innerText = `${cObj.title} (${cObj.rarity})`;
-        } else {
-          document.getElementById('partnerOfferCard').innerText = 'ยังไม่เลือกการ์ด';
-        }
-        document.getElementById('partnerOfferStatus').innerText = partnerConfirm ? '✅ ยืนยันแล้ว' : '⏳ กำลังเลือก/รอการยืนยัน';
-
-        if (data.p1_confirm && data.p2_confirm && data.status === 'active') {
-          await executeTradeSwap(data);
-        }
-      });
-    }
-
-    window.updateMyOffer = async function() {
-      if (!currentTradeId) return;
-      const cardId = document.getElementById('myTradeCardSelect').value;
-      const snapshot = await get(child(ref(db), `trades/${currentTradeId}`));
-      if (!snapshot.exists()) return;
-
-      const data = snapshot.val();
-      const isP1 = username === data.p1;
-
-      if (isP1) {
-        data.p1_card = cardId ? parseInt(cardId) : null;
-        data.p1_confirm = false;
-      } else {
-        data.p2_card = cardId ? parseInt(cardId) : null;
-        data.p2_confirm = false;
-      }
-
-      await set(ref(db, `trades/${currentTradeId}`), data);
-    };
-
-    window.confirmTrade = async function() {
-      const cardId = document.getElementById('myTradeCardSelect').value;
-      if (!cardId) return alert('กรุณาเลือกการ์ดที่จะนำมาแลกเปลี่ยนก่อนครับ');
-
-      const snapshot = await get(child(ref(db), `trades/${currentTradeId}`));
-      if (!snapshot.exists()) return;
-
-      const data = snapshot.val();
-      if (username === data.p1) data.p1_confirm = true;
-      else data.p2_confirm = true;
-
-      await set(ref(db, `trades/${currentTradeId}`), data);
-      document.getElementById('confirmTradeBtn').disabled = true;
-    };
-
-    async function executeTradeSwap(tradeData) {
-      tradeData.status = 'completed';
-      await set(ref(db, `trades/${currentTradeId}`), tradeData);
-
-      const isP1 = username === tradeData.p1;
-      const giveCardId = isP1 ? tradeData.p1_card : tradeData.p2_card;
-      const getCardId = isP1 ? tradeData.p2_card : tradeData.p1_card;
-
-      playerData.unlockedCards = playerData.unlockedCards.filter(id => id !== giveCardId);
-      if (!playerData.unlockedCards.includes(getCardId)) {
-        playerData.unlockedCards.push(getCardId);
-      }
-
-      await saveDataOnline();
-      alert('🎉 แลกเปลี่ยนการ์ดเรียบร้อยแล้ว!');
-
-      await remove(ref(db, `trades/${currentTradeId}`));
-      resetTradeUI();
-      initCollection();
-    }
-
-    window.cancelTrade = async function() {
-      if (currentTradeId) {
-        await remove(ref(db, `trades/${currentTradeId}`));
-      }
-      resetTradeUI();
-    };
-
-    function resetTradeUI() {
-      currentTradeId = null;
-      document.getElementById('tradeInit').style.display = 'block';
-      document.getElementById('tradeRoom').style.display = 'none';
-      document.getElementById('confirmTradeBtn').disabled = false;
-      document.getElementById('myTradeCardSelect').value = '';
-    }
-
-    window.drawCard = function() {
-      if (playerData.spins === undefined) playerData.spins = 10;
-      if (playerData.spins <= 0) {
-        return alert('❌ สปินของคุณหมดแล้ว!');
-      }
-
-      const cardInner = document.getElementById('cardInner');
-      const btn = document.getElementById('drawBtn');
-      btn.disabled = true;
-
-      if (isFlipped) {
-        cardInner.classList.remove('flipped');
-        isFlipped = false;
-        setTimeout(randomizeAndFlip, 600);
-      } else {
-        randomizeAndFlip();
-      }
-    };
-
-    async function randomizeAndFlip() {
-      const randomIndex = Math.floor(Math.random() * gachaPool.length);
-      const selectedCard = gachaPool[randomIndex];
-
-      playerData.spins -= 1;
-      playerData.drawCount = (playerData.drawCount || 0) + 1;
-
-      document.getElementById('spinsDisplay').innerText = playerData.spins;
-      document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
-
-      document.getElementById('cardRarity').innerText = selectedCard.rarity;
-      document.getElementById('cardImage').src = selectedCard.image;
-      document.getElementById('cardTitle').innerText = selectedCard.title;
-      document.getElementById('cardDesc').innerText = selectedCard.desc;
-
-      if (!playerData.unlockedCards) playerData.unlockedCards = [];
-      if (!playerData.unlockedCards.includes(selectedCard.id)) {
-        playerData.unlockedCards.push(selectedCard.id);
-      }
-
-      await saveDataOnline();
-      initCollection();
-      updateTradeCardSelect();
-
-      document.getElementById('cardInner').classList.add('flipped');
-      isFlipped = true;
-      setTimeout(() => { document.getElementById('drawBtn').disabled = false; }, 600);
-    }
-
-    document.getElementById('card').addEventListener('click', window.drawCard);
-  </script>
-</body>
-</html>
+     
