@@ -62,12 +62,12 @@
     
     /* Trait Icon Badge บนมุมการ์ด */
     .trait-badge {
-      position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7);
-      padding: 3px 6px; border-radius: 8px; display: flex; align-items: center; gap: 4px; z-index: 5;
-      border: 1px solid #f1c40f;
+      position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8);
+      padding: 4px 8px; border-radius: 8px; display: flex; align-items: center; gap: 5px; z-index: 5;
+      border: 1px solid #f1c40f; box-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
     }
-    .trait-badge img { width: 20px; height: 20px; object-fit: contain; border-radius: 4px; }
-    .trait-badge span { font-size: 0.7rem; color: #f1c40f; font-weight: bold; }
+    .trait-badge img { width: 22px; height: 22px; object-fit: contain; border-radius: 4px; }
+    .trait-badge span { font-size: 0.75rem; color: #f1c40f; font-weight: bold; }
 
     @keyframes glow {
       from { box-shadow: 0 0 5px #f1c40f; }
@@ -246,7 +246,7 @@
 
       <!-- PVP BATTLE SYSTEM -->
       <div class="battle-box" style="border: 2px dashed #3498db;">
-        <h3>🛡️️ ลานประลอง PvP (เลือกเด็คดวล Realtime รับเหรียญ)</h3>
+        <h3>🛡 ลานประลอง PvP (เลือกเด็คดวล Realtime รับเหรียญ)</h3>
         <div id="pvpInit">
           <input type="text" id="targetPvpInput" placeholder="พิมพ์ชื่อผู้เล่นอื่นที่จะท้าดวล ..."><br>
           <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; margin: 12px 0; text-align: left;">
@@ -344,7 +344,7 @@
       <!-- ส่วนระบบอัปเกรดเลเวล -->
       <div style="background: rgba(0,0,0,0.05); border-top: 1px dashed #ccc; margin-top: 12px; padding-top: 10px;">
         <p id="upgradeCostText" style="font-size: 0.85rem; margin: 5px 0; color: #333; font-weight: bold;">ค่าอัปเกรด: 100 เหรียญ</p>
-        <button class="btn-gold btn-sm" id="upgradeCardBtn" style="width: 100%;">⬆️ อัปเกรดเลเวล (+1)</button>
+        <button class="btn-gold btn-sm" id="upgradeCardBtn" style="width: 100%;">⬆️️ อัปเกรดเลเวล (+1)</button>
       </div>
     </div>
   </div>
@@ -422,7 +422,7 @@
     let playerData = { 
       unlockedCards: [], 
       cardLevels: {}, 
-      cardTraits: {}, // เก็บ Trait ของการ์ดแต่ละใบ เช่น { "1": "xd" }
+      cardTraits: {}, 
       usedCodes: [], 
       drawCount: 0, 
       spins: 10, 
@@ -538,7 +538,6 @@
       document.getElementById('pityBar').style.width = `${((playerData.pity % 5) / 5) * 100}%`;
     }
 
-    // --- ฟังก์ชันคำนวณสเตตัส เลเวล และ Trait ---
     function getCardLevel(cardId) {
       if (!playerData.cardLevels) playerData.cardLevels = {};
       return playerData.cardLevels[cardId] || 1;
@@ -553,7 +552,6 @@
       const lvl = getCardLevel(card.id);
       let base = card.baseAtk * (1 + (lvl - 1) * 0.1);
       
-      // ถ้าการ์ดมี Trait 'xd' เพิ่มดาเมจอีก 11%
       const trait = getCardTrait(card.id);
       if (trait === 'xd') {
         base *= 1.11;
@@ -570,10 +568,8 @@
       return currentLevel * 50;
     }
 
-    // --- ฟังก์ชันสุ่ม Trait (โอกาส 20% ที่จะได้ Trait xd) ---
     function rollTraitForCard(cardId) {
       if (!playerData.cardTraits) playerData.cardTraits = {};
-      // สุ่มโอกาส 20% (0.2) ได้ trait xd ถ้ายังไม่มี
       if (!playerData.cardTraits[cardId]) {
         const chance = Math.random();
         if (chance <= 0.20) {
@@ -582,7 +578,6 @@
       }
     }
 
-    // --- SHOP SYSTEM ACTIONS ---
     document.getElementById('buySpin1Btn').addEventListener('click', async () => {
       const cost = 50;
       if ((playerData.coins || 0) < cost) return alert('❌ เหรียญของคุณไม่พอสำหรับซื้อสปินนี้!');
@@ -622,7 +617,6 @@
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
       updatePityDisplay();
 
-      // จัดการปลดล็อกการ์ดและสุ่ม Trait
       if (!playerData.unlockedCards.includes(cardObj.id)) {
         playerData.unlockedCards.push(cardObj.id);
         if (!playerData.cardLevels) playerData.cardLevels = {};
@@ -634,7 +628,6 @@
       rarityBadgeEl.innerText = cardObj.rarity;
       rarityBadgeEl.className = cardObj.rarity === 'UL' ? 'rarity-badge ul' : 'rarity-badge';
 
-      // แสดงป้าย Trait บนการ์ดถ้ามี
       const cardTrait = getCardTrait(cardObj.id);
       const traitBadgeEl = document.getElementById('cardTraitBadge');
       if (cardTrait === 'xd') {
@@ -847,7 +840,6 @@
       activeModalCardId = null;
     });
 
-    // --- PVE BATTLE ---
     function generateBoss() {
       const diffKey = document.getElementById('pveDifficultySelect').value;
       const diffConfig = difficultyMultipliers[diffKey];
@@ -1033,7 +1025,6 @@
       generateBoss();
     }
 
-    // --- PVP REALTIME SYSTEM ---
     document.getElementById('startPvpBtn').addEventListener('click', async () => {
       const target = document.getElementById('targetPvpInput').value.trim();
       if (!target || target === username) return alert('❌ กรุณากรอกชื่อผู้เล่นอื่นให้ถูกต้อง');
@@ -1289,7 +1280,6 @@
       document.getElementById('pvpResult').innerHTML = '';
     }
 
-    // --- LEADERBOARD ---
     document.getElementById('tabCards').addEventListener('click', () => switchLeaderboard('cards'));
     document.getElementById('tabCoins').addEventListener('click', () => switchLeaderboard('coins'));
 
