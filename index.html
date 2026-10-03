@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ด Ultimate Edition + Shop & Upgrade System</title>
+  <title>เกมสุ่มการ์ด Ultimate Edition + Trait System</title>
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -59,6 +59,16 @@
     .card-back img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; z-index: 5; }
     .rarity-badge.ul { background: linear-gradient(135deg, #f1c40f, #e67e22, #e74c3c); color: #fff; animation: glow 1.5s infinite alternate; }
+    
+    /* Trait Icon Badge บนมุมการ์ด */
+    .trait-badge {
+      position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7);
+      padding: 3px 6px; border-radius: 8px; display: flex; align-items: center; gap: 4px; z-index: 5;
+      border: 1px solid #f1c40f;
+    }
+    .trait-badge img { width: 20px; height: 20px; object-fit: contain; border-radius: 4px; }
+    .trait-badge span { font-size: 0.7rem; color: #f1c40f; font-weight: bold; }
+
     @keyframes glow {
       from { box-shadow: 0 0 5px #f1c40f; }
       to { box-shadow: 0 0 15px #e74c3c; }
@@ -141,6 +151,10 @@
           <div class="card-front"><span style="font-size: 4rem;">❓</span><p>พร้อมสุ่ม</p></div>
           <div class="card-back" id="cardBack">
             <span class="rarity-badge" id="cardRarity">N</span>
+            <div class="trait-badge" id="cardTraitBadge" style="display: none;">
+              <img src="images/xd.png" alt="xd">
+              <span>xd (+11%)</span>
+            </div>
             <img id="cardImage" src="" alt="Card">
             <h3 id="cardTitle" style="margin: 10px 0 2px 0;">ชื่อการ์ด</h3>
             <p id="cardStatsText" style="font-size: 0.8rem; font-weight: bold; color: #e74c3c; margin: 0;">ATK: 0 | HP: 0</p>
@@ -232,7 +246,7 @@
 
       <!-- PVP BATTLE SYSTEM -->
       <div class="battle-box" style="border: 2px dashed #3498db;">
-        <h3>🛡️ ลานประลอง PvP (เลือกเด็คดวล Realtime รับเหรียญ)</h3>
+        <h3>🛡️️ ลานประลอง PvP (เลือกเด็คดวล Realtime รับเหรียญ)</h3>
         <div id="pvpInit">
           <input type="text" id="targetPvpInput" placeholder="พิมพ์ชื่อผู้เล่นอื่นที่จะท้าดวล ..."><br>
           <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; margin: 12px 0; text-align: left;">
@@ -317,6 +331,10 @@
     <div class="modal-content" id="modalBox">
       <span class="close-btn" id="closeModalBtn">&times;</span>
       <span class="rarity-badge" id="modalRarity">UR</span>
+      <div class="trait-badge" id="modalTraitBadge" style="display: none;">
+        <img src="images/xd.png" alt="xd">
+        <span>xd (+11%)</span>
+      </div>
       <img id="modalImage" src="" alt="Card">
       <h3 id="modalTitle" style="margin: 15px 0 2px 0;">ชื่อการ์ด</h3>
       <p id="modalLevelText" style="font-weight: bold; color: #f1c40f; margin: 2px 0;">Level: 1 / 60</p>
@@ -403,7 +421,8 @@
     let username = '';
     let playerData = { 
       unlockedCards: [], 
-      cardLevels: {}, // เก็บเลเวลของการ์ดแต่ละใบ เช่น { "1": 5, "2": 10 }
+      cardLevels: {}, 
+      cardTraits: {}, // เก็บ Trait ของการ์ดแต่ละใบ เช่น { "1": "xd" }
       usedCodes: [], 
       drawCount: 0, 
       spins: 10, 
@@ -418,7 +437,7 @@
 
     let selectedPveCardIds = [];
     let selectedPvpCardIds = [];
-    let activeModalCardId = null; // เก็บ ID การ์ดที่กำลังเปิดดูใน Modal
+    let activeModalCardId = null;
 
     let battleState = {
       activeCardsQueue: [],
@@ -468,9 +487,9 @@
         try {
           const snapshot = await db.ref(`users/${user.uid}`).once('value');
           if (snapshot.exists()) {
-            playerData = Object.assign({ unlockedCards: [], cardLevels: {}, usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] }, snapshot.val());
+            playerData = Object.assign({ unlockedCards: [], cardLevels: {}, cardTraits: {}, usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] }, snapshot.val());
           } else {
-            playerData = { email: user.email, username: username, unlockedCards: [], cardLevels: {}, usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] };
+            playerData = { email: user.email, username: username, unlockedCards: [], cardLevels: {}, cardTraits: {}, usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] };
             await saveDataOnline();
           }
           await db.ref(`usernames/${username}`).set({ uid: user.uid, email: user.email });
@@ -519,16 +538,27 @@
       document.getElementById('pityBar').style.width = `${((playerData.pity % 5) / 5) * 100}%`;
     }
 
-    // --- ฟังก์ชันคำนวณสเตตัสและการอัปเกรดการ์ด ---
+    // --- ฟังก์ชันคำนวณสเตตัส เลเวล และ Trait ---
     function getCardLevel(cardId) {
       if (!playerData.cardLevels) playerData.cardLevels = {};
-      return playerData.cardLevels[cardId] || 1; // เริ่มต้นที่เลเวล 1
+      return playerData.cardLevels[cardId] || 1;
+    }
+
+    function getCardTrait(cardId) {
+      if (!playerData.cardTraits) playerData.cardTraits = {};
+      return playerData.cardTraits[cardId] || null;
     }
 
     function getCardAtk(card) {
       const lvl = getCardLevel(card.id);
-      // สูตรสเตตัสเพิ่มขึ้นตามเลเวล (เช่น เลเวลละ +5% หรือสูตรสมดุล)
-      return Math.round(card.baseAtk * (1 + (lvl - 1) * 0.1));
+      let base = card.baseAtk * (1 + (lvl - 1) * 0.1);
+      
+      // ถ้าการ์ดมี Trait 'xd' เพิ่มดาเมจอีก 11%
+      const trait = getCardTrait(card.id);
+      if (trait === 'xd') {
+        base *= 1.11;
+      }
+      return Math.round(base);
     }
 
     function getCardHp(card) {
@@ -537,8 +567,19 @@
     }
 
     function getUpgradeCost(currentLevel) {
-      // สูตรราคาอัปเกรด: เลเวลปัจจุบัน คูณ 50 เหรียญ
       return currentLevel * 50;
+    }
+
+    // --- ฟังก์ชันสุ่ม Trait (โอกาส 20% ที่จะได้ Trait xd) ---
+    function rollTraitForCard(cardId) {
+      if (!playerData.cardTraits) playerData.cardTraits = {};
+      // สุ่มโอกาส 20% (0.2) ได้ trait xd ถ้ายังไม่มี
+      if (!playerData.cardTraits[cardId]) {
+        const chance = Math.random();
+        if (chance <= 0.20) {
+          playerData.cardTraits[cardId] = 'xd';
+        }
+      }
     }
 
     // --- SHOP SYSTEM ACTIONS ---
@@ -581,20 +622,31 @@
       document.getElementById('drawCountDisplay').innerText = playerData.drawCount;
       updatePityDisplay();
 
-      const rarityBadgeEl = document.getElementById('cardRarity');
-      rarityBadgeEl.innerText = cardObj.rarity;
-      rarityBadgeEl.className = cardObj.rarity === 'UL' ? 'rarity-badge ul' : 'rarity-badge';
-
-      document.getElementById('cardImage').src = cardObj.image;
-      document.getElementById('cardTitle').innerText = cardObj.title;
-      document.getElementById('cardStatsText').innerText = `ATK: ${getCardAtk(cardObj)} | HP: ${getCardHp(cardObj)}`;
-      document.getElementById('cardDesc').innerText = cardObj.desc;
-
+      // จัดการปลดล็อกการ์ดและสุ่ม Trait
       if (!playerData.unlockedCards.includes(cardObj.id)) {
         playerData.unlockedCards.push(cardObj.id);
         if (!playerData.cardLevels) playerData.cardLevels = {};
         playerData.cardLevels[cardObj.id] = 1;
       }
+      rollTraitForCard(cardObj.id);
+
+      const rarityBadgeEl = document.getElementById('cardRarity');
+      rarityBadgeEl.innerText = cardObj.rarity;
+      rarityBadgeEl.className = cardObj.rarity === 'UL' ? 'rarity-badge ul' : 'rarity-badge';
+
+      // แสดงป้าย Trait บนการ์ดถ้ามี
+      const cardTrait = getCardTrait(cardObj.id);
+      const traitBadgeEl = document.getElementById('cardTraitBadge');
+      if (cardTrait === 'xd') {
+        traitBadgeEl.style.display = 'flex';
+      } else {
+        traitBadgeEl.style.display = 'none';
+      }
+
+      document.getElementById('cardImage').src = cardObj.image;
+      document.getElementById('cardTitle').innerText = cardObj.title;
+      document.getElementById('cardStatsText').innerText = `ATK: ${getCardAtk(cardObj)} | HP: ${getCardHp(cardObj)}`;
+      document.getElementById('cardDesc').innerText = cardObj.desc;
 
       await saveDataOnline();
       updateQuestUI();
@@ -640,6 +692,7 @@
         if (!playerData.cardLevels) playerData.cardLevels = {};
         playerData.cardLevels[codeData.cardId] = 1;
       }
+      rollTraitForCard(codeData.cardId);
       playerData.usedCodes.push(code);
 
       await saveDataOnline();
@@ -658,12 +711,13 @@
       cards.forEach(c => {
         const isUnlocked = unlocked.includes(c.id);
         const lvl = getCardLevel(c.id);
+        const trait = getCardTrait(c.id);
         const item = document.createElement('div');
         item.className = `collection-item ${isUnlocked ? 'unlocked' : ''}`;
         item.innerHTML = `
           <img src="${c.image}">
           <div style="font-size:0.75rem; font-weight:bold; margin-top:4px;">${c.title}</div>
-          <div style="font-size:0.7rem; color:${isUnlocked ? '#d35400' : '#888'};">Lv.${lvl}</div>
+          <div style="font-size:0.7rem; color:${isUnlocked ? '#d35400' : '#888'};">Lv.${lvl} ${trait ? '⚡xd' : ''}</div>
         `;
         if (isUnlocked) item.addEventListener('click', () => openModal(c));
         grid.appendChild(item);
@@ -688,10 +742,11 @@
         const c = cards.find(item => item.id === id);
         if (!c) return;
         const lvl = getCardLevel(c.id);
+        const trait = getCardTrait(c.id);
 
         const pveItem = document.createElement('div');
         pveItem.className = `deck-select-item ${selectedPveCardIds.includes(id) ? 'selected' : ''}`;
-        pveItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div><div style="font-size:0.65rem; color:#f1c40f;">Lv.${lvl}</div>`;
+        pveItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div><div style="font-size:0.65rem; color:#f1c40f;">Lv.${lvl} ${trait ? 'xd' : ''}</div>`;
         pveItem.addEventListener('click', () => {
           if (selectedPveCardIds.includes(id)) {
             selectedPveCardIds = selectedPveCardIds.filter(i => i !== id);
@@ -704,7 +759,7 @@
 
         const pvpItem = document.createElement('div');
         pvpItem.className = `deck-select-item ${selectedPvpCardIds.includes(id) ? 'selected' : ''}`;
-        pvpItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div><div style="font-size:0.65rem; color:#f1c40f;">Lv.${lvl}</div>`;
+        pvpItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div><div style="font-size:0.65rem; color:#f1c40f;">Lv.${lvl} ${trait ? 'xd' : ''}</div>`;
         pvpItem.addEventListener('click', () => {
           if (selectedPvpCardIds.includes(id)) {
             selectedPvpCardIds = selectedPvpCardIds.filter(i => i !== id);
@@ -725,9 +780,18 @@
 
     function updateModalContent(c) {
       const lvl = getCardLevel(c.id);
+      const trait = getCardTrait(c.id);
+
       const modalRarityEl = document.getElementById('modalRarity');
       modalRarityEl.innerText = c.rarity;
       modalRarityEl.className = c.rarity === 'UL' ? 'rarity-badge ul' : 'rarity-badge';
+
+      const modalTraitBadge = document.getElementById('modalTraitBadge');
+      if (trait === 'xd') {
+        modalTraitBadge.style.display = 'flex';
+      } else {
+        modalTraitBadge.style.display = 'none';
+      }
 
       document.getElementById('modalImage').src = c.image;
       document.getElementById('modalTitle').innerText = c.title;
@@ -763,14 +827,12 @@
         return alert(`❌ เหรียญไม่พอ! ต้องการ ${cost} เหรียญ แต่คุณมี ${playerData.coins || 0} เหรียญ`);
       }
 
-      // หักเหรียญและเพิ่มเลเวล
       playerData.coins -= cost;
       if (!playerData.cardLevels) playerData.cardLevels = {};
       playerData.cardLevels[c.id] = currentLvl + 1;
 
       await saveDataOnline();
 
-      // อัปเดต UI หน้าจอทั้งหมด
       document.getElementById('coinsDisplay').innerText = playerData.coins;
       updateModalContent(c);
       initCollection();
