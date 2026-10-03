@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ด Ultimate Edition + Trait System</title>
+  <title>เกมสุ่มการ์ด Ultimate Edition + Trait & Reroll System</title>
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -320,7 +320,7 @@
       <!-- COLLECTION SECTION -->
       <div class="collection-section">
         <h3>📖 สมุดสะสมการ์ด & อัปเกรด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h3>
-        <p style="font-size: 0.85rem; color: #aaa; margin-top: -5px;">คลิกการ์ดที่ปลดล็อกแล้ว เพื่อดูรายละเอียดและกดอัปเกรดเลเวล (สูงสุด 60)</p>
+        <p style="font-size: 0.85rem; color: #aaa; margin-top: -5px;">คลิกการ์ดที่ปลดล็อกแล้ว เพื่อดูรายละเอียด, อัปเกรดเลเวล หรือสุ่ม Trait ใหม่</p>
         <div class="collection-grid" id="collectionGrid"></div>
       </div>
     </div>
@@ -339,12 +339,19 @@
       <h3 id="modalTitle" style="margin: 15px 0 2px 0;">ชื่อการ์ด</h3>
       <p id="modalLevelText" style="font-weight: bold; color: #f1c40f; margin: 2px 0;">Level: 1 / 60</p>
       <p id="modalStatsText" style="font-weight: bold; color: #e74c3c; margin: 0;">ATK: 0 | HP: 0</p>
+      <p id="modalTraitText" style="font-size: 0.85rem; color: #3498db; margin: 4px 0 0 0; font-weight: bold;">Trait: ไม่มี</p>
       <p id="modalDesc" style="color: #666; font-size: 0.85rem; margin-top: 5px;">รายละเอียด</p>
       
       <!-- ส่วนระบบอัปเกรดเลเวล -->
       <div style="background: rgba(0,0,0,0.05); border-top: 1px dashed #ccc; margin-top: 12px; padding-top: 10px;">
         <p id="upgradeCostText" style="font-size: 0.85rem; margin: 5px 0; color: #333; font-weight: bold;">ค่าอัปเกรด: 100 เหรียญ</p>
-        <button class="btn-gold btn-sm" id="upgradeCardBtn" style="width: 100%;">⬆️️ อัปเกรดเลเวล (+1)</button>
+        <button class="btn-gold btn-sm" id="upgradeCardBtn" style="width: 100%;">⬆️ อัปเกรดเลเวล (+1)</button>
+      </div>
+
+      <!-- ส่วนระบบ Trait Reroll -->
+      <div style="background: rgba(0,0,0,0.05); border-top: 1px dashed #ccc; margin-top: 12px; padding-top: 10px;">
+        <p style="font-size: 0.85rem; margin: 2px 0; color: #8e44ad; font-weight: bold;">🎲 สุ่ม Trait ใหม่ (ใช้ 100 เหรียญ)</p>
+        <button class="btn-purple btn-sm" id="rerollTraitBtn" style="width: 100%;">⚡ สุ่ม Trait (ลุ้นรับ xd ATK+11%)</button>
       </div>
     </div>
   </div>
@@ -578,6 +585,33 @@
       }
     }
 
+    async function rerollTraitForCard(cardId) {
+      const cost = 100;
+      if ((playerData.coins || 0) < cost) {
+        return alert(`❌ เหรียญไม่พอ! สุ่ม Trait ใหม่ใช้ ${cost} เหรียญ (คุณมี ${playerData.coins || 0} เหรียญ)`);
+      }
+
+      playerData.coins -= cost;
+      if (!playerData.cardTraits) playerData.cardTraits = {};
+
+      const chance = Math.random();
+      if (chance <= 0.30) {
+        playerData.cardTraits[cardId] = 'xd';
+        alert('🎉 สุ่มสำเร็จ! ได้รับ Trait [xd] (เพิ่มพลังโจมตี ATK +11%)');
+      } else {
+        delete playerData.cardTraits[cardId];
+        alert('💨 สุ่มแล้วไม่ได้ Trait ในรอบนี้ (ลองใหม่อีกครั้ง)');
+      }
+
+      await saveDataOnline();
+      document.getElementById('coinsDisplay').innerText = playerData.coins;
+      
+      const c = cards.find(item => item.id === cardId);
+      if (c) updateModalContent(c);
+      initCollection();
+      renderDeckSelectors();
+    }
+
     document.getElementById('buySpin1Btn').addEventListener('click', async () => {
       const cost = 50;
       if ((playerData.coins || 0) < cost) return alert('❌ เหรียญของคุณไม่พอสำหรับซื้อสปินนี้!');
@@ -622,6 +656,7 @@
         if (!playerData.cardLevels) playerData.cardLevels = {};
         playerData.cardLevels[cardObj.id] = 1;
       }
+      
       rollTraitForCard(cardObj.id);
 
       const rarityBadgeEl = document.getElementById('cardRarity');
@@ -790,6 +825,7 @@
       document.getElementById('modalTitle').innerText = c.title;
       document.getElementById('modalLevelText').innerText = `Level: ${lvl} / 60`;
       document.getElementById('modalStatsText').innerText = `ATK: ${getCardAtk(c)} | HP: ${getCardHp(c)}`;
+      document.getElementById('modalTraitText').innerText = `Trait: ${trait ? 'xd (+11% ATK)' : 'ไม่มี'}`;
       document.getElementById('modalDesc').innerText = c.desc;
 
       const upgradeBtn = document.getElementById('upgradeCardBtn');
@@ -832,6 +868,12 @@
       renderDeckSelectors();
 
       alert(`🎉 อัปเกรด ${c.title} สำเร็จ! สู่ Level ${playerData.cardLevels[c.id]}`);
+    });
+
+    document.getElementById('rerollTraitBtn').addEventListener('click', () => {
+      if (activeModalCardId) {
+        rerollTraitForCard(activeModalCardId);
+      }
     });
 
     document.getElementById('closeModalBtn').addEventListener('click', (e) => {
