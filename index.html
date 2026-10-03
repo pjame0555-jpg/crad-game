@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เกมสุ่มการ์ด Ultimate Edition + Shop System</title>
+  <title>เกมสุ่มการ์ด Ultimate Edition + Shop & Upgrade System</title>
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -76,10 +76,10 @@
     .btn-gold { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #333; }
     .btn-sm { padding: 6px 14px; font-size: 0.85rem; border-radius: 15px; }
     .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; font-size: 0.95rem; display: inline-block; margin-top: 10px; }
-    .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; margin-top: 15px; }
-    .collection-item { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 8px; opacity: 0.35; filter: grayscale(100%); transition: all 0.3s; cursor: pointer; }
+    .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 15px; }
+    .collection-item { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 8px; opacity: 0.35; filter: grayscale(100%); transition: all 0.3s; cursor: pointer; text-align: center; }
     .collection-item.unlocked { opacity: 1; filter: grayscale(0%); border: 2px solid #f1c40f; background: #fff; color: #333; }
-    .collection-item img { width: 100%; height: 65px; object-fit: cover; border-radius: 6px; }
+    .collection-item img { width: 100%; height: 75px; object-fit: cover; border-radius: 6px; }
     
     .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin: 12px 0; }
     .deck-select-item { background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
@@ -93,8 +93,8 @@
     .leaderboard-item { display: flex; justify-content: space-between; padding: 10px 15px; background: rgba(0, 0, 0, 0.4); border-radius: 8px; margin-bottom: 8px; }
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content { background: #fff; color: #333; border: 4px solid #f1c40f; border-radius: 20px; padding: 25px; width: 300px; text-align: center; position: relative; }
-    .modal-content img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; }
+    .modal-content { background: #fff; color: #333; border: 4px solid #f1c40f; border-radius: 20px; padding: 20px; width: 320px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-content img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; }
     .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #777; z-index: 10; }
   </style>
 </head>
@@ -305,7 +305,8 @@
 
       <!-- COLLECTION SECTION -->
       <div class="collection-section">
-        <h3>📖 สมุดสะสมการ์ด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h3>
+        <h3>📖 สมุดสะสมการ์ด & อัปเกรด (<span id="collectedCount">0</span>/<span id="totalCount">0</span>)</h3>
+        <p style="font-size: 0.85rem; color: #aaa; margin-top: -5px;">คลิกการ์ดที่ปลดล็อกแล้ว เพื่อดูรายละเอียดและกดอัปเกรดเลเวล (สูงสุด 60)</p>
         <div class="collection-grid" id="collectionGrid"></div>
       </div>
     </div>
@@ -318,8 +319,15 @@
       <span class="rarity-badge" id="modalRarity">UR</span>
       <img id="modalImage" src="" alt="Card">
       <h3 id="modalTitle" style="margin: 15px 0 2px 0;">ชื่อการ์ด</h3>
+      <p id="modalLevelText" style="font-weight: bold; color: #f1c40f; margin: 2px 0;">Level: 1 / 60</p>
       <p id="modalStatsText" style="font-weight: bold; color: #e74c3c; margin: 0;">ATK: 0 | HP: 0</p>
-      <p id="modalDesc" style="color: #666; font-size: 0.9rem; margin-top: 5px;">รายละเอียด</p>
+      <p id="modalDesc" style="color: #666; font-size: 0.85rem; margin-top: 5px;">รายละเอียด</p>
+      
+      <!-- ส่วนระบบอัปเกรดเลเวล -->
+      <div style="background: rgba(0,0,0,0.05); border-top: 1px dashed #ccc; margin-top: 12px; padding-top: 10px;">
+        <p id="upgradeCostText" style="font-size: 0.85rem; margin: 5px 0; color: #333; font-weight: bold;">ค่าอัปเกรด: 100 เหรียญ</p>
+        <button class="btn-gold btn-sm" id="upgradeCardBtn" style="width: 100%;">⬆️ อัปเกรดเลเวล (+1)</button>
+      </div>
     </div>
   </div>
 
@@ -345,8 +353,8 @@
         id: 1, 
         title: 'Ryoma (SNK)', 
         rarity: 'UR', 
-        atk: 60, 
-        hp: 180, 
+        baseAtk: 60, 
+        baseHp: 180, 
         desc: 'ซามูไรพเนจร [Passive: เลือดไหล 10% ทุกเทิร์น | Skill: ยิกๆ ดาเมจ 50]', 
         image: 'images/ryoma.png',
         skillName: 'ยิกๆ',
@@ -356,8 +364,8 @@
         id: 2, 
         title: 'ปีศาจขุมนรก', 
         rarity: 'SSR', 
-        atk: 35, 
-        hp: 100, 
+        baseAtk: 35, 
+        baseHp: 100, 
         desc: 'ปีศาจแห่งความมืด [Passive: ตายแล้วลากศัตรูเสียบ 50% HP ทันที]', 
         image: 'images/demon.jpeg',
         hasSkill: false
@@ -366,8 +374,8 @@
         id: 3, 
         title: 'Reiko Kashima', 
         rarity: 'UL', 
-        atk: 110, 
-        hp: 300, 
+        baseAtk: 110, 
+        baseHp: 300, 
         desc: 'ภูตผีสุดแกร่ง [Passive: เกิดใหม่ 1 ครั้ง | Skill: กระจกมรณะ โจมตีทุกใบในเด็คศัตรู 120]', 
         image: 'images/dandadan1.png',
         skillName: 'กระจกมรณะ',
@@ -376,13 +384,12 @@
     ];
 
     const gachaPool = [
-      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', atk: 35, hp: 100, desc: 'ปีศาจแห่งความมืด', image: 'images/demon.jpeg', rate: 99.99 },
-      { id: 3, title: 'Reiko Kashima', rarity: 'UL', atk: 110, hp: 300, desc: 'ภูตผีสุดแกร่ง', image: 'images/dandadan1.png', rate: 0.01 }
+      { id: 2, title: 'ปีศาจขุมนรก', rarity: 'SSR', baseAtk: 35, baseHp: 100, desc: 'ปีศาจแห่งความมืด', image: 'images/demon.jpeg', rate: 99.99 },
+      { id: 3, title: 'Reiko Kashima', rarity: 'UL', baseAtk: 110, baseHp: 300, desc: 'ภูตผีสุดแกร่ง', image: 'images/dandadan1.png', rate: 0.01 }
     ];
 
     const promoCodes = { 'snk': { cardId: 1, rewardName: 'Ryoma (SNK)' } };
 
-    // ปรับเรทรางวัลบอสให้ดรอปเป็น "เหรียญ" แทนสปินตรงๆ
     const difficultyMultipliers = {
       easy: { mult: 0.6, rewardCoins: 30, name: 'Easy' },
       normal: { mult: 1.0, rewardCoins: 60, name: 'Normal' },
@@ -394,7 +401,16 @@
     let isRegisterMode = false;
     let currentUser = null;
     let username = '';
-    let playerData = { unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] };
+    let playerData = { 
+      unlockedCards: [], 
+      cardLevels: {}, // เก็บเลเวลของการ์ดแต่ละใบ เช่น { "1": 5, "2": 10 }
+      usedCodes: [], 
+      drawCount: 0, 
+      spins: 10, 
+      coins: 100, 
+      pity: 0, 
+      claimedQuests: [] 
+    };
     let currentLeaderboardTab = 'cards';
     let allUsersCache = {};
     let currentBoss = null;
@@ -402,6 +418,7 @@
 
     let selectedPveCardIds = [];
     let selectedPvpCardIds = [];
+    let activeModalCardId = null; // เก็บ ID การ์ดที่กำลังเปิดดูใน Modal
 
     let battleState = {
       activeCardsQueue: [],
@@ -451,9 +468,9 @@
         try {
           const snapshot = await db.ref(`users/${user.uid}`).once('value');
           if (snapshot.exists()) {
-            playerData = Object.assign({ unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] }, snapshot.val());
+            playerData = Object.assign({ unlockedCards: [], cardLevels: {}, usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] }, snapshot.val());
           } else {
-            playerData = { email: user.email, username: username, unlockedCards: [], usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] };
+            playerData = { email: user.email, username: username, unlockedCards: [], cardLevels: {}, usedCodes: [], drawCount: 0, spins: 10, coins: 100, pity: 0, claimedQuests: [] };
             await saveDataOnline();
           }
           await db.ref(`usernames/${username}`).set({ uid: user.uid, email: user.email });
@@ -502,6 +519,28 @@
       document.getElementById('pityBar').style.width = `${((playerData.pity % 5) / 5) * 100}%`;
     }
 
+    // --- ฟังก์ชันคำนวณสเตตัสและการอัปเกรดการ์ด ---
+    function getCardLevel(cardId) {
+      if (!playerData.cardLevels) playerData.cardLevels = {};
+      return playerData.cardLevels[cardId] || 1; // เริ่มต้นที่เลเวล 1
+    }
+
+    function getCardAtk(card) {
+      const lvl = getCardLevel(card.id);
+      // สูตรสเตตัสเพิ่มขึ้นตามเลเวล (เช่น เลเวลละ +5% หรือสูตรสมดุล)
+      return Math.round(card.baseAtk * (1 + (lvl - 1) * 0.1));
+    }
+
+    function getCardHp(card) {
+      const lvl = getCardLevel(card.id);
+      return Math.round(card.baseHp * (1 + (lvl - 1) * 0.1));
+    }
+
+    function getUpgradeCost(currentLevel) {
+      // สูตรราคาอัปเกรด: เลเวลปัจจุบัน คูณ 50 เหรียญ
+      return currentLevel * 50;
+    }
+
     // --- SHOP SYSTEM ACTIONS ---
     document.getElementById('buySpin1Btn').addEventListener('click', async () => {
       const cost = 50;
@@ -548,10 +587,14 @@
 
       document.getElementById('cardImage').src = cardObj.image;
       document.getElementById('cardTitle').innerText = cardObj.title;
-      document.getElementById('cardStatsText').innerText = `ATK: ${cardObj.atk} | HP: ${cardObj.hp}`;
+      document.getElementById('cardStatsText').innerText = `ATK: ${getCardAtk(cardObj)} | HP: ${getCardHp(cardObj)}`;
       document.getElementById('cardDesc').innerText = cardObj.desc;
 
-      if (!playerData.unlockedCards.includes(cardObj.id)) playerData.unlockedCards.push(cardObj.id);
+      if (!playerData.unlockedCards.includes(cardObj.id)) {
+        playerData.unlockedCards.push(cardObj.id);
+        if (!playerData.cardLevels) playerData.cardLevels = {};
+        playerData.cardLevels[cardObj.id] = 1;
+      }
 
       await saveDataOnline();
       updateQuestUI();
@@ -592,7 +635,11 @@
       if (!playerData.usedCodes) playerData.usedCodes = [];
       if (playerData.usedCodes.includes(code)) return alert('⚠️ คุณเคยใช้โค้ดนี้แล้ว');
 
-      if (!playerData.unlockedCards.includes(codeData.cardId)) playerData.unlockedCards.push(codeData.cardId);
+      if (!playerData.unlockedCards.includes(codeData.cardId)) {
+        playerData.unlockedCards.push(codeData.cardId);
+        if (!playerData.cardLevels) playerData.cardLevels = {};
+        playerData.cardLevels[codeData.cardId] = 1;
+      }
       playerData.usedCodes.push(code);
 
       await saveDataOnline();
@@ -610,9 +657,14 @@
 
       cards.forEach(c => {
         const isUnlocked = unlocked.includes(c.id);
+        const lvl = getCardLevel(c.id);
         const item = document.createElement('div');
         item.className = `collection-item ${isUnlocked ? 'unlocked' : ''}`;
-        item.innerHTML = `<img src="${c.image}"><div style="font-size:0.75rem; font-weight:bold; margin-top:4px;">${c.title}</div>`;
+        item.innerHTML = `
+          <img src="${c.image}">
+          <div style="font-size:0.75rem; font-weight:bold; margin-top:4px;">${c.title}</div>
+          <div style="font-size:0.7rem; color:${isUnlocked ? '#d35400' : '#888'};">Lv.${lvl}</div>
+        `;
         if (isUnlocked) item.addEventListener('click', () => openModal(c));
         grid.appendChild(item);
       });
@@ -635,10 +687,11 @@
       unlocked.forEach(id => {
         const c = cards.find(item => item.id === id);
         if (!c) return;
+        const lvl = getCardLevel(c.id);
 
         const pveItem = document.createElement('div');
         pveItem.className = `deck-select-item ${selectedPveCardIds.includes(id) ? 'selected' : ''}`;
-        pveItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div>`;
+        pveItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div><div style="font-size:0.65rem; color:#f1c40f;">Lv.${lvl}</div>`;
         pveItem.addEventListener('click', () => {
           if (selectedPveCardIds.includes(id)) {
             selectedPveCardIds = selectedPveCardIds.filter(i => i !== id);
@@ -651,7 +704,7 @@
 
         const pvpItem = document.createElement('div');
         pvpItem.className = `deck-select-item ${selectedPvpCardIds.includes(id) ? 'selected' : ''}`;
-        pvpItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div>`;
+        pvpItem.innerHTML = `<img src="${c.image}"><div style="font-size:0.7rem; font-weight:bold; margin-top:3px;">${c.title}</div><div style="font-size:0.65rem; color:#f1c40f;">Lv.${lvl}</div>`;
         pvpItem.addEventListener('click', () => {
           if (selectedPvpCardIds.includes(id)) {
             selectedPvpCardIds = selectedPvpCardIds.filter(i => i !== id);
@@ -665,20 +718,71 @@
     }
 
     function openModal(c) {
+      activeModalCardId = c.id;
+      updateModalContent(c);
+      document.getElementById('cardModal').classList.add('active');
+    }
+
+    function updateModalContent(c) {
+      const lvl = getCardLevel(c.id);
       const modalRarityEl = document.getElementById('modalRarity');
       modalRarityEl.innerText = c.rarity;
       modalRarityEl.className = c.rarity === 'UL' ? 'rarity-badge ul' : 'rarity-badge';
 
       document.getElementById('modalImage').src = c.image;
       document.getElementById('modalTitle').innerText = c.title;
-      document.getElementById('modalStatsText').innerText = `ATK: ${c.atk} | HP: ${c.hp}`;
+      document.getElementById('modalLevelText').innerText = `Level: ${lvl} / 60`;
+      document.getElementById('modalStatsText').innerText = `ATK: ${getCardAtk(c)} | HP: ${getCardHp(c)}`;
       document.getElementById('modalDesc').innerText = c.desc;
-      document.getElementById('cardModal').classList.add('active');
+
+      const upgradeBtn = document.getElementById('upgradeCardBtn');
+      const costText = document.getElementById('upgradeCostText');
+
+      if (lvl >= 60) {
+        costText.innerText = '⭐ การ์ดถึงระดับสูงสุด (Level 60) แล้ว!';
+        upgradeBtn.disabled = true;
+        upgradeBtn.innerText = 'Max Level Reached';
+      } else {
+        const cost = getUpgradeCost(lvl);
+        costText.innerText = `ค่าอัปเกรดเลเวลถัดไป: ${cost} เหรียญ`;
+        upgradeBtn.disabled = false;
+        upgradeBtn.innerText = `⬆️ อัปเกรดเลเวล (ใช้ ${cost} เหรียญ)`;
+      }
     }
+
+    document.getElementById('upgradeCardBtn').addEventListener('click', async () => {
+      if (!activeModalCardId) return;
+      const c = cards.find(item => item.id === activeModalCardId);
+      if (!c) return;
+
+      const currentLvl = getCardLevel(c.id);
+      if (currentLvl >= 60) return alert('❌ การ์ดนี้ถึงเลเวลสูงสุด 60 แล้ว!');
+
+      const cost = getUpgradeCost(currentLvl);
+      if ((playerData.coins || 0) < cost) {
+        return alert(`❌ เหรียญไม่พอ! ต้องการ ${cost} เหรียญ แต่คุณมี ${playerData.coins || 0} เหรียญ`);
+      }
+
+      // หักเหรียญและเพิ่มเลเวล
+      playerData.coins -= cost;
+      if (!playerData.cardLevels) playerData.cardLevels = {};
+      playerData.cardLevels[c.id] = currentLvl + 1;
+
+      await saveDataOnline();
+
+      // อัปเดต UI หน้าจอทั้งหมด
+      document.getElementById('coinsDisplay').innerText = playerData.coins;
+      updateModalContent(c);
+      initCollection();
+      renderDeckSelectors();
+
+      alert(`🎉 อัปเกรด ${c.title} สำเร็จ! สู่ Level ${playerData.cardLevels[c.id]}`);
+    });
 
     document.getElementById('closeModalBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('cardModal').classList.remove('active');
+      activeModalCardId = null;
     });
 
     // --- PVE BATTLE ---
@@ -690,8 +794,8 @@
       currentBoss = {
         title: `[${diffConfig.name}] ${randomCard.title}`,
         baseCard: randomCard,
-        atk: Math.round(randomCard.atk * diffConfig.mult),
-        hp: Math.round(randomCard.hp * diffConfig.mult),
+        atk: Math.round(randomCard.baseAtk * diffConfig.mult),
+        hp: Math.round(randomCard.baseHp * diffConfig.mult),
         image: randomCard.image,
         rewardCoins: diffConfig.rewardCoins
       };
@@ -709,7 +813,11 @@
 
       battleState.activeCardsQueue = selectedPveCardIds.map(id => {
         const c = cards.find(item => item.id === id);
-        return { ...c };
+        return { 
+          ...c, 
+          atk: getCardAtk(c), 
+          hp: getCardHp(c) 
+        };
       });
 
       battleState.currentCardIndex = 0;
@@ -738,7 +846,7 @@
       battleState.myAtk = activeCard.atk;
       battleState.currentCardObj = activeCard;
 
-      document.getElementById('battleMyCardName').innerText = `${activeCard.title} (${activeCard.rarity})`;
+      document.getElementById('battleMyCardName').innerText = `${activeCard.title} (Lv.${getCardLevel(activeCard.id)})`;
       updatePveUI();
 
       const skillBtn = document.getElementById('pveSkillBtn');
@@ -877,7 +985,13 @@
       
       const myDeck = selectedPvpCardIds.map(id => {
         const c = cards.find(item => item.id === id);
-        return { ...c, currentHp: c.hp };
+        const maxHp = getCardHp(c);
+        return { 
+          ...c, 
+          atk: getCardAtk(c), 
+          hp: maxHp, 
+          currentHp: maxHp 
+        };
       });
 
       await db.ref(`pvp/${currentPvpId}`).set({
@@ -909,7 +1023,13 @@
               currentPvpId = id;
               const myDeck = selectedPvpCardIds.map(i => {
                 const c = cards.find(item => item.id === i);
-                return { ...c, currentHp: c.hp };
+                const maxHp = getCardHp(c);
+                return { 
+                  ...c, 
+                  atk: getCardAtk(c), 
+                  hp: maxHp, 
+                  currentHp: maxHp 
+                };
               });
               room.p2_deck = myDeck;
               room.status = 'playing';
