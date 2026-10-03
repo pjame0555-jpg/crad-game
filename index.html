@@ -60,14 +60,32 @@
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; z-index: 5; }
     .rarity-badge.ul { background: linear-gradient(135deg, #f1c40f, #e67e22, #e74c3c); color: #fff; animation: glow 1.5s infinite alternate; }
     
-    /* Trait Icon Badge บนมุมการ์ด */
+    /* 📌 ปรับขนาด Trait Icon Badge ให้เล็กกระชับและอยู่ชิดมุมการ์ด */
     .trait-badge {
-      position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8);
-      padding: 4px 8px; border-radius: 8px; display: flex; align-items: center; gap: 5px; z-index: 5;
-      border: 1px solid #f1c40f; box-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
+      position: absolute; 
+      top: 6px; 
+      left: 6px; 
+      background: rgba(0, 0, 0, 0.85);
+      padding: 2px 6px; 
+      border-radius: 6px; 
+      display: flex; 
+      align-items: center; 
+      gap: 4px; 
+      z-index: 5;
+      border: 1px solid #f1c40f; 
+      box-shadow: 0 0 6px rgba(241, 196, 15, 0.5);
     }
-    .trait-badge img { width: 22px; height: 22px; object-fit: contain; border-radius: 4px; }
-    .trait-badge span { font-size: 0.75rem; color: #f1c40f; font-weight: bold; }
+    .trait-badge img { 
+      width: 16px; 
+      height: 16px; 
+      object-fit: contain; 
+      border-radius: 3px; 
+    }
+    .trait-badge span { 
+      font-size: 0.65rem; 
+      color: #f1c40f; 
+      font-weight: bold; 
+    }
 
     @keyframes glow {
       from { box-shadow: 0 0 5px #f1c40f; }
