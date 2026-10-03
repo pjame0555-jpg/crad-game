@@ -56,35 +56,50 @@
     }
     .card-front { background: #1a252f; border: 4px solid #fff; justify-content: center; }
     .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; }
-    .card-back img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    
+    /* ระบุ ID รูปการ์ดหลักโดยตรง เพื่อไม่ให้กระทบรูปไอคอนอื่น */
+    #cardImage, #modalImage { 
+      width: 100%; 
+      height: 140px; 
+      object-fit: cover; 
+      border-radius: 10px; 
+    }
+
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; z-index: 5; }
     .rarity-badge.ul { background: linear-gradient(135deg, #f1c40f, #e67e22, #e74c3c); color: #fff; animation: glow 1.5s infinite alternate; }
     
-    /* 📌 ปรับขนาด Trait Icon Badge ให้เล็กกระชับและอยู่ชิดมุมการ์ด */
+    /* 📌 แก้ไข Trait Badge ให้เล็กกะทัดรัด อยู่ชิดมุมซ้ายบนอย่างพอดี */
     .trait-badge {
       position: absolute; 
-      top: 6px; 
-      left: 6px; 
+      top: 10px; 
+      left: 10px; 
       background: rgba(0, 0, 0, 0.85);
       padding: 2px 6px; 
       border-radius: 6px; 
-      display: flex; 
+      display: inline-flex; 
       align-items: center; 
       gap: 4px; 
-      z-index: 5;
+      z-index: 20;
       border: 1px solid #f1c40f; 
-      box-shadow: 0 0 6px rgba(241, 196, 15, 0.5);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.6);
+      max-width: max-content;
+      pointer-events: none;
     }
     .trait-badge img { 
-      width: 16px; 
-      height: 16px; 
-      object-fit: contain; 
-      border-radius: 3px; 
+      width: 14px !important; 
+      height: 14px !important; 
+      max-width: 14px !important;
+      max-height: 14px !important;
+      object-fit: contain !important; 
+      border-radius: 2px; 
+      display: block;
     }
     .trait-badge span { 
       font-size: 0.65rem; 
       color: #f1c40f; 
       font-weight: bold; 
+      line-height: 1;
+      white-space: nowrap;
     }
 
     @keyframes glow {
@@ -122,7 +137,6 @@
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content { background: #fff; color: #333; border: 4px solid #f1c40f; border-radius: 20px; padding: 20px; width: 320px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-content img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; }
     .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #777; z-index: 10; }
   </style>
 </head>
@@ -834,7 +848,7 @@
 
       const modalTraitBadge = document.getElementById('modalTraitBadge');
       if (trait === 'xd') {
-        modalTraitBadge.style.display = 'flex';
+        modalTraitBadge.style.display = 'inline-flex';
       } else {
         modalTraitBadge.style.display = 'none';
       }
@@ -1132,7 +1146,7 @@
               continue;
             }
             
-            if (confirm(`🛡️ ผู้เล่น ${room.p1} ท้าดวล PvP กับคุณ ยืนยันเข้าร่วมหรือไม่?`)) {
+            if (confirm(`🛡️️ ผู้เล่น ${room.p1} ท้าดวล PvP กับคุณ ยืนยันเข้าร่วมหรือไม่?`)) {
               currentPvpId = id;
               const myDeck = selectedPvpCardIds.map(i => {
                 const c = cards.find(item => item.id === i);
