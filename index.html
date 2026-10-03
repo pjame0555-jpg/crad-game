@@ -57,7 +57,6 @@
     .card-front { background: #1a252f; border: 4px solid #fff; justify-content: center; }
     .card-back { background: #fff; color: #333; transform: rotateY(180deg); border: 4px solid #f1c40f; }
     
-    /* ระบุ ID รูปการ์ดหลักโดยตรง เพื่อไม่ให้กระทบรูปไอคอนอื่น */
     #cardImage, #modalImage { 
       width: 100%; 
       height: 140px; 
@@ -68,34 +67,33 @@
     .rarity-badge { position: absolute; top: 10px; right: 10px; background: #2c3e50; color: #fff; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; z-index: 5; }
     .rarity-badge.ul { background: linear-gradient(135deg, #f1c40f, #e67e22, #e74c3c); color: #fff; animation: glow 1.5s infinite alternate; }
     
-    /* 📌 แก้ไข Trait Badge ให้เล็กกะทัดรัด อยู่ชิดมุมซ้ายบนอย่างพอดี */
+    /* 📌 ปรับขนาด Trait Badge ให้ใหญ่พอดี ไม่บังรูปการ์ด */
     .trait-badge {
       position: absolute; 
-      top: 10px; 
-      left: 10px; 
+      top: 8px; 
+      left: 8px; 
       background: rgba(0, 0, 0, 0.85);
-      padding: 2px 6px; 
-      border-radius: 6px; 
+      padding: 3px 8px; 
+      border-radius: 8px; 
       display: inline-flex; 
       align-items: center; 
-      gap: 4px; 
+      gap: 5px; 
       z-index: 20;
       border: 1px solid #f1c40f; 
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.6);
-      max-width: max-content;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
       pointer-events: none;
     }
     .trait-badge img { 
-      width: 14px !important; 
-      height: 14px !important; 
-      max-width: 14px !important;
-      max-height: 14px !important;
+      width: 20px !important; 
+      height: 20px !important; 
+      max-width: 20px !important;
+      max-height: 20px !important;
       object-fit: contain !important; 
-      border-radius: 2px; 
+      border-radius: 3px; 
       display: block;
     }
     .trait-badge span { 
-      font-size: 0.65rem; 
+      font-size: 0.75rem; 
       color: #f1c40f; 
       font-weight: bold; 
       line-height: 1;
@@ -185,7 +183,7 @@
             <span class="rarity-badge" id="cardRarity">N</span>
             <div class="trait-badge" id="cardTraitBadge" style="display: none;">
               <img src="images/xd.png" alt="xd">
-              <span>xd (+11%)</span>
+              <span>xd</span>
             </div>
             <img id="cardImage" src="" alt="Card">
             <h3 id="cardTitle" style="margin: 10px 0 2px 0;">ชื่อการ์ด</h3>
@@ -365,7 +363,7 @@
       <span class="rarity-badge" id="modalRarity">UR</span>
       <div class="trait-badge" id="modalTraitBadge" style="display: none;">
         <img src="images/xd.png" alt="xd">
-        <span>xd (+11%)</span>
+        <span>xd</span>
       </div>
       <img id="modalImage" src="" alt="Card">
       <h3 id="modalTitle" style="margin: 15px 0 2px 0;">ชื่อการ์ด</h3>
@@ -698,7 +696,7 @@
       const cardTrait = getCardTrait(cardObj.id);
       const traitBadgeEl = document.getElementById('cardTraitBadge');
       if (cardTrait === 'xd') {
-        traitBadgeEl.style.display = 'flex';
+        traitBadgeEl.style.display = 'inline-flex';
       } else {
         traitBadgeEl.style.display = 'none';
       }
@@ -1146,7 +1144,7 @@
               continue;
             }
             
-            if (confirm(`🛡️️ ผู้เล่น ${room.p1} ท้าดวล PvP กับคุณ ยืนยันเข้าร่วมหรือไม่?`)) {
+            if (confirm(`🛡️ ผู้เล่น ${room.p1} ท้าดวล PvP กับคุณ ยืนยันเข้าร่วมหรือไม่?`)) {
               currentPvpId = id;
               const myDeck = selectedPvpCardIds.map(i => {
                 const c = cards.find(item => item.id === i);
